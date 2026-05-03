@@ -20,17 +20,55 @@ jobs:
       - name: Generate ISA package
         run: make docs
 
+      - name: Verilator lint (Tiara core)
+        run: |
+          verilator --lint-only -Wall -Wno-DECLFILENAME -Wno-PINMISSING \
+            -Wno-WIDTH -Wno-UNUSED -Wno-UNOPTFLAT -Wno-MULTIDRIVEN \
+            +incdir+rtl/include +incdir+rtl/tiara_nic \
+            --top-module tiara_nic_top \
+            rtl/include/tiara_pkg.svh \
+            rtl/tiara_nic/tiara_mem_if.sv \
+            rtl/tiara_nic/tiara_alu.sv \
+            rtl/tiara_nic/tiara_regfile.sv \
+            rtl/tiara_nic/tiara_istore.sv \
+            rtl/tiara_nic/tiara_loop_stack.sv \
+            rtl/tiara_nic/tiara_pcie_dma.sv \
+            rtl/tiara_nic/tiara_rdma_engine.sv \
+            rtl/tiara_nic/tiara_memory_subsystem.sv \
+            rtl/tiara_nic/tiara_mp.sv \
+            rtl/tiara_nic/tiara_dispatcher.sv \
+            rtl/tiara_nic/tiara_nic_top.sv
+
       - name: Build simulator
         run: make sim
 
       - name: Self-test
         run: make selftest
 
-      - name: Unit tests
+      - name: Unit tests (Python + sim integration)
         run: make test
+
+      - name: End-to-end RX→Tiara→TX testbench
+        run: make test_app
 
       - name: Build client
         run: make client
 
-      - name: Run smoke benchmark
-        run: make bench
+      - name: Eval workloads + plots
+        run: |
+          make eval
+          ls eval/results/ eval/figures/
+
+      - name: Generate summary table
+        run: python3 scripts/make_summary.py
+
+      - name: Archive results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tiara-results
+          path: |
+            eval/results/
+            eval/figures/
+            reports/SUMMARY.md
+            reports/SUMMARY.csv
