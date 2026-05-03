@@ -28,7 +28,10 @@ vivado -mode batch -source tcl/synth.tcl -log /tmp/tiara_synth.log -journal /tmp
 
 # 2) Splice our mqnic_app_block into Corundum's template tree
 echo "=== [2/4] Splicing Tiara app block into Corundum ==="
-cp -v "$APP_SRC/mqnic_app_block.v" "$APP_DST/"
+cp -v "$APP_SRC/mqnic_app_block.sv" "$APP_DST/"
+# Remove the original Corundum template's .v if present so Vivado does
+# not pick up two definitions of the same module.
+rm -f "$APP_DST/mqnic_app_block.v"
 mkdir -p "$APP_DST/tiara"
 cp -rv "$TIARA_RTL"/*.sv          "$APP_DST/tiara/"
 cp -v  "$TIARA_INC/tiara_pkg.svh" "$APP_DST/tiara/"
@@ -47,7 +50,7 @@ TIARA_BASE="app/template/rtl/tiara"
 if ! grep -q 'tiara_pkg.svh' "$MK"; then
     awk -v TB="$TIARA_BASE" '/^SYN_FILES \+= rtl\/sync_signal.v$/ {
         print
-        print "SYN_FILES += app/template/rtl/mqnic_app_block.v"
+        print "SYN_FILES += app/template/rtl/mqnic_app_block.sv"
         print "SYN_FILES += " TB "/tiara_pkg.svh"
         print "SYN_FILES += " TB "/tiara_packet.svh"
         print "SYN_FILES += " TB "/tiara_mem_if.sv"

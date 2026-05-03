@@ -40,7 +40,7 @@ read_verilog -sv $RTL_INT/tiara_axil_slave.sv
 read_verilog -sv $RTL_INT/tiara_rx_filter.sv
 read_verilog -sv $RTL_INT/tiara_tx_resp.sv
 read_verilog -sv $RTL_INT/tiara_tx_arb.sv
-read_verilog -sv $RTL_INT/mqnic_app_block.v
+read_verilog -sv $RTL_INT/mqnic_app_block.sv
 
 read_xdc $ROOT/constraints/tiara.xdc
 
