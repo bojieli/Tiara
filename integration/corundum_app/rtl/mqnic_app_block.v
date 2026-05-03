@@ -615,6 +615,12 @@ wire                                                  tiara_load_en;
 wire [9:0]                                            tiara_load_addr;
 wire [63:0]                                           tiara_load_data;
 
+// Invocation comes from two sources (priority to RX): the RX filter
+// when a Tiara packet arrives, or the AXI-Lite host control plane when
+// software pokes the ctrl register.
+wire                                                  axil_inv_valid;
+wire [63:0]                                           axil_inv_args [0:7];
+
 wire                                                  tiara_inv_valid;
 wire [63:0]                                           tiara_inv_args [0:7];
 wire                                                  tiara_inv_busy;
@@ -651,8 +657,8 @@ tiara_axil_slave #(
     .mp_load_en        (tiara_load_en),
     .mp_load_addr      (tiara_load_addr),
     .mp_load_data      (tiara_load_data),
-    .mp_inv_valid      (tiara_inv_valid),
-    .mp_inv_args       (tiara_inv_args),
+    .mp_inv_valid      (axil_inv_valid),
+    .mp_inv_args       (axil_inv_args),
     .mp_inv_busy       (tiara_inv_busy),
     .mp_done           (tiara_done),
     .mp_done_result    (tiara_done_result),
@@ -788,30 +794,150 @@ assign m_axis_sync_rx_tlast = s_axis_sync_rx_tlast;
 assign m_axis_sync_rx_tuser = s_axis_sync_rx_tuser;
 
 /*
- * Ethernet (internal at interface module)
+ * Ethernet datapath:
+ *   RX: filter Tiara invocation packets out of s_axis_if_rx_*, pass
+ *       everything else through to the rest of the NIC stack.
+ *       Matched invocations are dispatched into the Tiara MP, with
+ *       the requester's MAC saved for the response.
+ *   TX: arbitrate Corundum's host-originated TX (s_axis_if_tx_*) with
+ *       the Tiara response stream onto m_axis_if_tx_*.  Tiara has
+ *       priority since responses are short and infrequent relative to
+ *       host data plane traffic.
  */
-assign m_axis_if_tx_tdata = s_axis_if_tx_tdata;
-assign m_axis_if_tx_tkeep = s_axis_if_tx_tkeep;
-assign m_axis_if_tx_tvalid = s_axis_if_tx_tvalid;
-assign s_axis_if_tx_tready = m_axis_if_tx_tready;
-assign m_axis_if_tx_tlast = s_axis_if_tx_tlast;
-assign m_axis_if_tx_tid = s_axis_if_tx_tid;
-assign m_axis_if_tx_tdest = s_axis_if_tx_tdest;
-assign m_axis_if_tx_tuser = s_axis_if_tx_tuser;
 
-assign m_axis_if_tx_cpl_ts = s_axis_if_tx_cpl_ts;
-assign m_axis_if_tx_cpl_tag = s_axis_if_tx_cpl_tag;
+// TX completion stream — passthrough.
+assign m_axis_if_tx_cpl_ts    = s_axis_if_tx_cpl_ts;
+assign m_axis_if_tx_cpl_tag   = s_axis_if_tx_cpl_tag;
 assign m_axis_if_tx_cpl_valid = s_axis_if_tx_cpl_valid;
 assign s_axis_if_tx_cpl_ready = m_axis_if_tx_cpl_ready;
 
-assign m_axis_if_rx_tdata = s_axis_if_rx_tdata;
-assign m_axis_if_rx_tkeep = s_axis_if_rx_tkeep;
-assign m_axis_if_rx_tvalid = s_axis_if_rx_tvalid;
-assign s_axis_if_rx_tready = m_axis_if_rx_tready;
-assign m_axis_if_rx_tlast = s_axis_if_rx_tlast;
-assign m_axis_if_rx_tid = s_axis_if_rx_tid;
-assign m_axis_if_rx_tdest = s_axis_if_rx_tdest;
-assign m_axis_if_rx_tuser = s_axis_if_rx_tuser;
+// Local NIC MAC — sourced statically here.  In the deployed build this
+// comes from the mqnic interface registers (read by software during
+// link-up); for the OOC integration sanity check a constant is fine.
+wire [47:0] tiara_local_mac = 48'h00_AA_BB_CC_DD_01;
+
+// Datapath wires from RX filter to dispatcher and TX response builder.
+wire        rx_inv_valid;
+wire [63:0] rx_inv_args [0:7];
+wire [31:0] rx_inv_op_id;
+wire [31:0] rx_inv_task_id;
+wire [47:0] rx_inv_src_mac;
+
+// Tiara TX response stream
+wire [AXIS_IF_DATA_WIDTH-1:0]   tia_tx_tdata;
+wire [AXIS_IF_KEEP_WIDTH-1:0]   tia_tx_tkeep;
+wire                            tia_tx_tvalid;
+wire                            tia_tx_tready;
+wire                            tia_tx_tlast;
+wire [AXIS_IF_TX_ID_WIDTH-1:0]  tia_tx_tid;
+wire [AXIS_IF_TX_DEST_WIDTH-1:0]tia_tx_tdest;
+wire [AXIS_IF_TX_USER_WIDTH-1:0]tia_tx_tuser;
+
+tiara_rx_filter #(
+    .DATA_WIDTH(AXIS_IF_DATA_WIDTH),
+    .KEEP_WIDTH(AXIS_IF_KEEP_WIDTH),
+    .ID_WIDTH  (AXIS_IF_RX_ID_WIDTH),
+    .DEST_WIDTH(AXIS_IF_RX_DEST_WIDTH),
+    .USER_WIDTH(AXIS_IF_RX_USER_WIDTH)
+) u_tiara_rx (
+    .clk          (clk),
+    .rst          (rst),
+    .s_axis_tdata (s_axis_if_rx_tdata),
+    .s_axis_tkeep (s_axis_if_rx_tkeep),
+    .s_axis_tvalid(s_axis_if_rx_tvalid),
+    .s_axis_tready(s_axis_if_rx_tready),
+    .s_axis_tlast (s_axis_if_rx_tlast),
+    .s_axis_tid   (s_axis_if_rx_tid),
+    .s_axis_tdest (s_axis_if_rx_tdest),
+    .s_axis_tuser (s_axis_if_rx_tuser),
+    .m_axis_tdata (m_axis_if_rx_tdata),
+    .m_axis_tkeep (m_axis_if_rx_tkeep),
+    .m_axis_tvalid(m_axis_if_rx_tvalid),
+    .m_axis_tready(m_axis_if_rx_tready),
+    .m_axis_tlast (m_axis_if_rx_tlast),
+    .m_axis_tid   (m_axis_if_rx_tid),
+    .m_axis_tdest (m_axis_if_rx_tdest),
+    .m_axis_tuser (m_axis_if_rx_tuser),
+    .inv_valid    (rx_inv_valid),
+    .inv_args     (rx_inv_args),
+    .inv_op_id    (rx_inv_op_id),
+    .inv_task_id  (rx_inv_task_id),
+    .inv_src_mac  (rx_inv_src_mac),
+    .mp_busy      (tiara_inv_busy)
+);
+
+tiara_tx_resp #(
+    .DATA_WIDTH(AXIS_IF_DATA_WIDTH),
+    .KEEP_WIDTH(AXIS_IF_KEEP_WIDTH),
+    .ID_WIDTH  (AXIS_IF_TX_ID_WIDTH),
+    .DEST_WIDTH(AXIS_IF_TX_DEST_WIDTH),
+    .USER_WIDTH(AXIS_IF_TX_USER_WIDTH)
+) u_tiara_tx (
+    .clk          (clk),
+    .rst          (rst),
+    .mp_done      (tiara_done),
+    .mp_done_err  (tiara_done_err),
+    .mp_done_result(tiara_done_result),
+    .src_mac      (rx_inv_src_mac),
+    .local_mac    (tiara_local_mac),
+    .op_id        (rx_inv_op_id),
+    .task_id      (rx_inv_task_id),
+    .m_axis_tdata (tia_tx_tdata),
+    .m_axis_tkeep (tia_tx_tkeep),
+    .m_axis_tvalid(tia_tx_tvalid),
+    .m_axis_tready(tia_tx_tready),
+    .m_axis_tlast (tia_tx_tlast),
+    .m_axis_tid   (tia_tx_tid),
+    .m_axis_tdest (tia_tx_tdest),
+    .m_axis_tuser (tia_tx_tuser)
+);
+
+tiara_tx_arb #(
+    .DATA_WIDTH(AXIS_IF_DATA_WIDTH),
+    .KEEP_WIDTH(AXIS_IF_KEEP_WIDTH),
+    .ID_WIDTH  (AXIS_IF_TX_ID_WIDTH),
+    .DEST_WIDTH(AXIS_IF_TX_DEST_WIDTH),
+    .USER_WIDTH(AXIS_IF_TX_USER_WIDTH)
+) u_tiara_tx_arb (
+    .clk      (clk),
+    .rst      (rst),
+    .s0_tdata (tia_tx_tdata),
+    .s0_tkeep (tia_tx_tkeep),
+    .s0_tvalid(tia_tx_tvalid),
+    .s0_tready(tia_tx_tready),
+    .s0_tlast (tia_tx_tlast),
+    .s0_tid   (tia_tx_tid),
+    .s0_tdest (tia_tx_tdest),
+    .s0_tuser (tia_tx_tuser),
+    .s1_tdata (s_axis_if_tx_tdata),
+    .s1_tkeep (s_axis_if_tx_tkeep),
+    .s1_tvalid(s_axis_if_tx_tvalid),
+    .s1_tready(s_axis_if_tx_tready),
+    .s1_tlast (s_axis_if_tx_tlast),
+    .s1_tid   (s_axis_if_tx_tid),
+    .s1_tdest (s_axis_if_tx_tdest),
+    .s1_tuser (s_axis_if_tx_tuser),
+    .m_tdata  (m_axis_if_tx_tdata),
+    .m_tkeep  (m_axis_if_tx_tkeep),
+    .m_tvalid (m_axis_if_tx_tvalid),
+    .m_tready (m_axis_if_tx_tready),
+    .m_tlast  (m_axis_if_tx_tlast),
+    .m_tid    (m_axis_if_tx_tid),
+    .m_tdest  (m_axis_if_tx_tdest),
+    .m_tuser  (m_axis_if_tx_tuser)
+);
+
+// Priority mux: RX-derived invocations win over host-AXI-Lite ones if
+// both happen to fire in the same cycle.  Both sources are expected
+// to honor `tiara_inv_busy` themselves (RX filter waits for it; the
+// AXI-Lite slave is software-driven and software is supposed to poll
+// the busy bit before writing the ctrl register).
+assign tiara_inv_valid = rx_inv_valid | axil_inv_valid;
+genvar gi;
+generate for (gi = 0; gi < 8; gi = gi + 1) begin : g_inv_mux
+    assign tiara_inv_args[gi] = rx_inv_valid ? rx_inv_args[gi]
+                                              : axil_inv_args[gi];
+end endgenerate
 
 /*
  * DDR

@@ -94,17 +94,26 @@ module tiara_axil_slave
   logic [31:0] arg_lo [0:7];
   logic [63:0] arg_q  [0:7];
 
-  // Done latch — sticky until read
+  // Done latch — sticky until read or until a new invocation clears it.
+  // Consolidated single-driver block handles all three control inputs:
+  //   set on mp_done, clear on a write to OFFS_CTRL[0] (new invoke)
+  //   or on a read of OFFS_STATUS (RC behavior).
   logic        done_sticky;
   logic        err_sticky;
+  logic        clr_done_invoke, clr_done_read;
 
   always_ff @(posedge clk) begin
     if (rst) begin
       done_sticky <= 1'b0;
       err_sticky  <= 1'b0;
     end else begin
-      if (mp_done)        done_sticky <= 1'b1;
-      if (mp_done && mp_done_err) err_sticky <= 1'b1;
+      if (mp_done) begin
+        done_sticky <= 1'b1;
+        if (mp_done_err) err_sticky <= 1'b1;
+      end else if (clr_done_invoke || clr_done_read) begin
+        done_sticky <= 1'b0;
+        if (clr_done_invoke) err_sticky <= 1'b0;
+      end
     end
   end
 
@@ -130,13 +139,15 @@ module tiara_axil_slave
       mp_load_addr   <= '0;
       mp_load_data   <= '0;
       istore_lo      <= '0;
+      clr_done_invoke<= 1'b0;
       for (int i = 0; i < 8; i++) begin
         arg_lo[i] <= '0;
         arg_q [i] <= '0;
       end
     end else begin
-      mp_load_en   <= 1'b0;
-      mp_inv_valid <= 1'b0;
+      mp_load_en      <= 1'b0;
+      mp_inv_valid    <= 1'b0;
+      clr_done_invoke <= 1'b0;
 
       unique case (wstate)
         W_IDLE: begin
@@ -168,9 +179,8 @@ module tiara_axil_slave
             // ---------- ctrl register ----------
             else if (s_axil_awaddr == OFFS_CTRL) begin
               if (s_axil_wdata[0]) begin
-                mp_inv_valid <= 1'b1;
-                done_sticky  <= 1'b0;
-                err_sticky   <= 1'b0;
+                mp_inv_valid    <= 1'b1;
+                clr_done_invoke <= 1'b1;
               end
             end
 
@@ -209,7 +219,9 @@ module tiara_axil_slave
       s_axil_rvalid  <= 1'b0;
       s_axil_rdata   <= '0;
       s_axil_rresp   <= 2'b00;
+      clr_done_read  <= 1'b0;
     end else begin
+      clr_done_read <= 1'b0;
       unique case (rstate)
         R_IDLE: begin
           if (s_axil_arvalid) begin
@@ -250,9 +262,10 @@ module tiara_axil_slave
           if (s_axil_rready && s_axil_rvalid) begin
             s_axil_rvalid <= 1'b0;
             rstate        <= R_IDLE;
-            // Clear sticky done after read
+            // Clear sticky done after read (consolidated driver
+            // handles the actual register write).
             if (ar_q == OFFS_STATUS) begin
-              done_sticky <= 1'b0;
+              clr_done_read <= 1'b1;
             end
           end
         end

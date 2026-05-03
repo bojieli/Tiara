@@ -18,6 +18,7 @@ help:
 	@echo "  make synth       - Vivado OOC synth on Alveo U50 (Tiara core)"
 	@echo "  make impl        - Vivado place + route + timing + util reports"
 	@echo "  make synth_app   - Vivado OOC synth on Tiara + Corundum app block"
+	@echo "  make test_app    - Verilator end-to-end RX→Tiara→TX test"
 	@echo "  make bitstream   - Build full U50 + Corundum + Tiara bitstream"
 	@echo "  make program     - Program U50 over JTAG with built bitstream"
 	@echo "  make clean       - remove build outputs"
@@ -74,6 +75,15 @@ synth_app: rtl/include/tiara_pkg.svh vendor/corundum
 	@echo "==== Post-synth utilization (Tiara + Corundum app) ===="
 	@head -65 synth_app/util_post_synth.rpt | tail -15 || true
 	@grep -A 4 'WNS(ns)' synth_app/timing_post_synth.rpt | head -6 || true
+
+impl_app: synth_app
+	$(VIVADO) -mode batch -source tcl/impl_app.tcl -log synth_app/vivado_impl.log -journal synth_app/vivado_impl.jou
+	@echo "==== Post-route timing (Tiara + Corundum app) ===="
+	@grep -A 4 'WNS(ns)' synth_app/timing_post_route.rpt | head -6 || true
+
+test_app: rtl/include/tiara_pkg.svh
+	$(MAKE) -C sim/verilator_app
+	sim/verilator_app/build/Vtiara_datapath_top --selftest
 
 vendor/corundum:
 	git clone --depth 1 https://github.com/corundum/corundum vendor/corundum

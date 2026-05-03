@@ -148,23 +148,32 @@ to the real U50 device at `/dev/tiara0`. Each invocation goes over
 PCIe to the FPGA; the resulting timings are measured end-to-end.
 Compare to the simulated values in `eval/results/*.dat`.
 
-## Limitations of the current host-control integration
+## Two invocation paths
 
-The `mqnic_app_block` shipping in this repo wires Tiara into the host
-AXI-Lite control region. That gives you:
+The shipping `mqnic_app_block` provides **both**:
 
-* Software-programmable operator load + invoke + result readout.
-* Fully synthesizable, fits in U50, closes 200 MHz timing.
-* End-to-end measurable latency from the host process.
+1. **Wire path** — remote clients send Tiara invocation packets
+   directly on the Ethernet interface using the protocol in
+   `docs/WIRE_PROTOCOL.md` (Ethertype 0x88B5).  The packet hits
+   `tiara_rx_filter` inside the NIC, dispatches to a memory processor,
+   and a single response packet leaves on the TX path.  No host CPU
+   involvement on the memory side.
+   * Verified end-to-end via the Verilator testbench
+     (`make test_app`, 4/4 cases pass).
 
-What it does **not** yet have:
+2. **Host-control path** — software running on the U50's host writes
+   operator binaries and pokes the invoke register over PIO via
+   `/dev/tiara0`.  Useful for first-time programming and debugging;
+   not the production data-path.
 
-* Direct path from incoming RDMA packets to the Tiara dispatcher (so
-  remote clients invoking operators currently round-trip through the
-  host CPU + Tiara PIO).
-* Direct AXI master access from Tiara to host DRAM via XDMA (operator
-  Memcpy currently hits the synth-time BFM stub).
+The same Tiara MP services both paths, with the wire path having
+priority on the inv_valid mux.
 
-Both are wiring exercises against the AXIS interfaces already exposed
-by `mqnic_app_block`. The data-path RX hookup is the natural next
-deliverable; see `docs/ROADMAP.md`.
+## Remaining gap: operator memory access via XDMA
+
+Operators that issue MEMCPY currently hit the synth-friendly BRAM stub
+(`tiara_mem_simple`).  Wiring those memory requests through Corundum's
+PCIe DMA descriptor interface to host DRAM is the next-step
+integration — the AXIS DMA descriptor outputs are already exposed by
+`mqnic_app_block` (see the `m_axis_data_dma_*` ports near line 380 of
+the file), so this is a pure wiring exercise.
