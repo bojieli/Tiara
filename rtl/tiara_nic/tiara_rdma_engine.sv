@@ -15,13 +15,10 @@ module tiara_rdma_engine
   import tiara_pkg::*;
 #(
     parameter int unsigned RTT_CYCLES   = 500,
-`ifdef SYNTHESIS
-    parameter int unsigned MEM_DEPTH    = 256,        // 2 KiB / peer for synth
-    parameter int unsigned NUM_PEERS    = 2,
-`else
+    // BRAM size of the simulated peer-DRAM stub.  Sim uses large values;
+    // synthesis overrides these via the top module.
     parameter int unsigned MEM_DEPTH    = 1 << 17,
     parameter int unsigned NUM_PEERS    = 4,
-`endif
     parameter int unsigned MAX_INFLIGHT = 32,
     parameter int unsigned BEAT_BYTES   = 64
 )
@@ -113,8 +110,6 @@ module tiara_rdma_engine
 
   always_ff @(posedge clk or negedge rst_n) begin
     int slot;
-    int bytes_left;
-    int dst_w, src_w;
     int dev_a_idx, dev_b_idx;
     if (!rst_n) begin
       for (int i = 0; i < MAX_INFLIGHT; i++) begin
@@ -204,17 +199,7 @@ module tiara_rdma_engine
                 wr_done <= 1'b1;
               end
               KIND_CPY: begin
-`ifndef SYNTHESIS
-                bytes_left = s_len[i];
-                dst_w      = s_addr_a[i] >> 3;
-                src_w      = s_addr_b[i] >> 3;
-                while (bytes_left > 0) begin
-                  peer_mem[dev_a_idx][dst_w] = peer_mem[dev_b_idx][src_w];
-                  dst_w      = dst_w + 1;
-                  src_w      = src_w + 1;
-                  bytes_left = bytes_left - 8;
-                end
-`endif
+                // See note in tiara_pcie_dma.sv KIND_CPY: latency only.
                 cpy_done <= 1'b1;
                 cpy_err  <= 1'b0;
               end

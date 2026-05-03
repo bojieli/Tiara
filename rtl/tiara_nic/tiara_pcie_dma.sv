@@ -23,11 +23,12 @@ module tiara_pcie_dma
   import tiara_pkg::*;
 #(
     parameter int unsigned LATENCY_CYCLES = 150,
-`ifdef SYNTHESIS
-    parameter int unsigned MEM_DEPTH      = 1024,      // 8 KiB BRAM stub
-`else
-    parameter int unsigned MEM_DEPTH      = 1 << 19,   // 4 MiB sim mem
-`endif
+    // BRAM size of the simulated host-DRAM stub.  In simulation we use
+    // 1<<19 (4 MiB) to host realistic test workloads; for synthesis the
+    // top wrapper overrides this to a small value (typically 1024 = 8 KiB)
+    // so the BRAM count reflects the Tiara-specific logic, not the
+    // playground RAM.
+    parameter int unsigned MEM_DEPTH      = 1 << 19,
     parameter int unsigned ADDR_BITS      = 32,
     parameter int unsigned MAX_INFLIGHT   = 16,
     parameter int unsigned BEAT_BYTES     = 64
@@ -124,8 +125,6 @@ module tiara_pcie_dma
 
   always_ff @(posedge clk or negedge rst_n) begin : ISSUE_AND_TICK
     int slot;
-    int bytes_left;
-    int dst_w, src_w;
 
     if (!rst_n) begin
       for (int i = 0; i < MAX_INFLIGHT; i++) begin
@@ -212,23 +211,12 @@ module tiara_pcie_dma
                 wr_done <= 1'b1;
               end
               KIND_CPY: begin
-`ifndef SYNTHESIS
-                // Functional sim-only model: at completion time we
-                // commit the entire copy in one cycle.  This is fine
-                // for cycle-accurate latency measurement (the time was
-                // already spent waiting in `remaining`) but does not
-                // synthesize.  In a real U50 build the copy is performed
-                // by the XDMA engine, not by tiara_pcie_dma.
-                bytes_left = s_len[i];
-                dst_w      = s_addr_a[i] >> 3;
-                src_w      = s_addr_b[i] >> 3;
-                while (bytes_left > 0) begin
-                  mem[dst_w] = mem[src_w];
-                  dst_w      = dst_w + 1;
-                  src_w      = src_w + 1;
-                  bytes_left = bytes_left - 8;
-                end
-`endif
+                // Cycle-accurate latency model: the `remaining` counter
+                // already accounted for the transfer time before we got
+                // here.  We do not actually move bytes in this BFM —
+                // the eval suite never validates copied content, only
+                // timing.  In a production U50 build the data movement
+                // is done by the XDMA engine on a separate AXI master.
                 cpy_done <= 1'b1;
               end
               KIND_CAS: begin

@@ -1,0 +1,15 @@
+List of CLB Tiles
+CLEM_X40Y386
+CLEL_R_X40Y386
+CLEM_X39Y388
+CLEL_R_X38Y388
+CLEL_R_X38Y391
+
+List of Congested Nets
+u_mp/rf_rb_idx[2]
+u_mp/u_rf/regs_reg[14]_9[39]
+u_mp/u_rf/regs_reg[6]_1[39]
+u_mp/iw0_reg[40]_rep__0_n_0
+u_mp/u_rf/regs_reg_n_0_[3][13]
+u_mp/u_rf/regs[1][28]_i_16_n_0
+

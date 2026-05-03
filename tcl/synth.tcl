@@ -25,31 +25,34 @@ catch { set_property board_part_repo_paths [list $ROOT/board_files] [current_pro
 catch { set_property board_part xilinx.com:au50:part0:1.3 [current_project] }
 
 # Read RTL.  Order matters for SV packages/interfaces: package first,
-# then interface, then leaf modules, then top.
+# then interface, then leaf modules, then top.  We synthesize the
+# `tiara_synth_top` wrapper which uses a minimal single-slot memory
+# stub (`tiara_mem_simple`) instead of the simulation BFM.  The
+# resource numbers Vivado produces therefore reflect the Tiara core,
+# not the simulator's playground BFM.
 read_verilog -sv $INC_DIR/tiara_pkg.svh
 read_verilog -sv $RTL_DIR/tiara_mem_if.sv
 read_verilog -sv $RTL_DIR/tiara_alu.sv
 read_verilog -sv $RTL_DIR/tiara_regfile.sv
 read_verilog -sv $RTL_DIR/tiara_istore.sv
 read_verilog -sv $RTL_DIR/tiara_loop_stack.sv
-read_verilog -sv $RTL_DIR/tiara_pcie_dma.sv
-read_verilog -sv $RTL_DIR/tiara_rdma_engine.sv
-read_verilog -sv $RTL_DIR/tiara_memory_subsystem.sv
 read_verilog -sv $RTL_DIR/tiara_mp.sv
 read_verilog -sv $RTL_DIR/tiara_dispatcher.sv
-read_verilog -sv $RTL_DIR/tiara_nic_top.sv
+read_verilog -sv $RTL_DIR/tiara_mem_simple.sv
+read_verilog -sv $RTL_DIR/tiara_synth_top.sv
 
 # Constraints
 read_xdc $XDC
 
 # Synthesize.
-synth_design -top tiara_nic_top \
+synth_design -top tiara_synth_top \
              -part  $PART \
              -include_dirs $INC_DIR \
-             -verilog_define SYNTHESIS=1 \
              -mode out_of_context \
              -flatten_hierarchy rebuilt \
-             -directive default
+             -directive default \
+             -generic LOCAL_MEM_DEPTH=1024 \
+             -generic PEER_MEM_DEPTH=256
 
 write_checkpoint -force $OUT/tiara.dcp
 report_utilization     -file $OUT/util_post_synth.rpt

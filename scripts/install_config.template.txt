@@ -1,0 +1,21 @@
+#### Vivado ML Standard install template (for reproducibility)
+#
+# Copy to ~/.Xilinx/install_config.txt, edit Destination, then:
+#   /tmp/xinst/xsetup -a XilinxEULA,3rdPartyEULA -b Install \
+#       -c ~/.Xilinx/install_config.txt
+#
+# The minimal device set below — Virtex UltraScale+ HBM (which contains
+# xcu50) plus Alveo platform support — totals ~33 GB to download.
+
+Edition=Vivado ML Standard
+Product=Vivado
+Destination=/home/ubuntu/Xilinx
+
+Modules=xcv80:0,Zynq UltraScale+ MPSoCs:0,Kintex UltraScale+ FPGAs:0,Virtex UltraScale+ 58G FPGAs:0,xcve2202:0,Vitis Model Composer(A toolbox for Simulink):0,Artix-7 FPGAs:0,Install devices for Alveo and edge acceleration platforms:1,Vitis Embedded Development:0,xcvm1102:0,Zynq-7000 All Programmable SoC:0,xcve2002:0,Virtex UltraScale+ HBM FPGAs:1,Spartan UltraScale+:0,xcve2302:0,Vitis Networking P4:0,Kintex UltraScale FPGAs:0,Power Design Manager (PDM):0,Virtex UltraScale+ FPGAs:0,Artix UltraScale+ FPGAs:0,Spartan-7 FPGAs:0,DocNav:0,Versal RF Series ES1:0,Install Devices for Kria SOMs and Starter Kits:0,xcve2102:0,Kintex-7 FPGAs:0
+
+InstallOptions=Acquire or Manage a License Key:0
+CreateProgramGroupShortcuts=0
+ProgramGroupFolder=AMD Adaptive SoC and FPGA Tools
+CreateShortcutsForAllUsers=0
+CreateDesktopShortcuts=0
+CreateFileAssociation=0

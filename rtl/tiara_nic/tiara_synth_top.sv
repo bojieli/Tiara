@@ -1,29 +1,24 @@
-// Tiara NIC top — single-MP simulator harness.
+// Tiara synthesis-only top.
 //
-// Instantiates one memory processor + dispatcher + memory subsystem in
-// a self-contained block whose only ports are:
-//   - clock / reset
-//   - operator-load port (for registering instructions)
-//   - invocation port (args in / result out)
+// Wraps the data-path core (MP, dispatcher, register file, instruction
+// store, ALU, loop stack) with a minimal single-slot memory subsystem
+// stub.  Intended for `make synth` to produce representative resource
+// numbers for the *Tiara-specific* logic on Alveo U50 — not the
+// elaborate behavioural BFM used by the simulator.
 //
-// All host-DRAM and peer-memory traffic is internal; the testbench
-// pokes / peeks via the DPI hooks exported by the BFMs.
+// In a real bitstream, replace the `tiara_mem_simple` instance with the
+// AXI master path that connects to the Xilinx XDMA + Corundum RDMA
+// stack (see docs/FPGA_BUILD.md).
 
 `include "tiara_pkg.svh"
 
-module tiara_nic_top
+module tiara_synth_top
   import tiara_pkg::*;
 #(
     parameter int unsigned LOCAL_LATENCY_CYCLES = 150,
     parameter int unsigned RTT_CYCLES           = 500,
-    parameter int unsigned NUM_PEERS            = 4,
-    // Backing-memory sizes for the simulated host DRAM and per-peer
-    // memories.  Defaults are sim-friendly (4 MiB local, 1 MiB peer);
-    // for synthesis pass `synth_design -generic LOCAL_MEM_DEPTH=1024
-    // -generic PEER_MEM_DEPTH=256 -generic NUM_PEERS=2` to shrink the
-    // BFM stubs to a few BRAMs.
-    parameter int unsigned LOCAL_MEM_DEPTH      = 1 << 19,
-    parameter int unsigned PEER_MEM_DEPTH       = 1 << 17
+    parameter int unsigned LOCAL_MEM_DEPTH      = 1024,
+    parameter int unsigned PEER_MEM_DEPTH       = 256
 )
 (
     input  logic                                clk,
@@ -46,15 +41,11 @@ module tiara_nic_top
     output logic [31:0]                         instr_retired
 );
 
-  // -------------------------------------------------------------------
-  // Memory interface
-  // -------------------------------------------------------------------
   tiara_mem_if mp_mem();
 
-  tiara_memory_subsystem #(
+  tiara_mem_simple #(
       .LOCAL_LATENCY_CYCLES(LOCAL_LATENCY_CYCLES),
       .RTT_CYCLES          (RTT_CYCLES),
-      .NUM_PEERS           (NUM_PEERS),
       .LOCAL_MEM_DEPTH     (LOCAL_MEM_DEPTH),
       .PEER_MEM_DEPTH      (PEER_MEM_DEPTH)
   ) u_mem (
@@ -63,9 +54,6 @@ module tiara_nic_top
       .mem  (mp_mem.mem)
   );
 
-  // -------------------------------------------------------------------
-  // Dispatcher <-> MP wires
-  // -------------------------------------------------------------------
   logic        mp_start;
   logic [63:0] mp_args   [0:7];
   logic        mp_done_w;

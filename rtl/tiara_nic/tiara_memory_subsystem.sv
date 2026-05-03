@@ -19,8 +19,8 @@ module tiara_memory_subsystem
     parameter int unsigned LOCAL_LATENCY_CYCLES = 150,   // 0.75 µs @ 200 MHz
     parameter int unsigned RTT_CYCLES           = 500,   // 2.5  µs @ 200 MHz
     parameter int unsigned NUM_PEERS            = 4,
-    parameter int unsigned LOCAL_MEM_DEPTH      = 1 << 19,
-    parameter int unsigned PEER_MEM_DEPTH       = 1 << 17
+    parameter int unsigned LOCAL_MEM_DEPTH      = 1 << 19,  // sim default
+    parameter int unsigned PEER_MEM_DEPTH       = 1 << 17   // sim default
 )
 (
     input  logic        clk,
@@ -72,7 +72,8 @@ module tiara_memory_subsystem
   tiara_pcie_dma #(
       .LATENCY_CYCLES(LOCAL_LATENCY_CYCLES),
       .MEM_DEPTH     (LOCAL_MEM_DEPTH)
-  ) u_pdma (
+  )
+  u_pdma (
       .clk          (clk),
       .rst_n        (rst_n),
       .rd_en        (pdma_rd_en),

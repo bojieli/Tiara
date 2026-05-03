@@ -1,0 +1,37 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
+| Date         : Sun May  3 08:30:52 2026
+| Host         : ubuntu running 64-bit Ubuntu 22.04.5 LTS
+| Command      : report_utilization -hierarchical -file /home/ubuntu/Tiara/synth/util_hier_post_route.rpt
+| Design       : tiara_synth_top
+| Device       : xcu50-fsvh2104-2-e
+| Speed File   : -2
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++---------------------+------------------+------------+------------+---------+------+-------+--------+--------+------+------------+
+|       Instance      |      Module      | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs  | RAMB36 | RAMB18 | URAM | DSP Blocks |
++---------------------+------------------+------------+------------+---------+------+-------+--------+--------+------+------------+
+| tiara_synth_top     |            (top) |      27286 |      27286 |       0 |    0 | 84733 |      2 |      0 |    0 |         10 |
+|   (tiara_synth_top) |            (top) |          0 |          0 |       0 |    0 |     3 |      0 |      0 |    0 |          0 |
+|   u_disp            | tiara_dispatcher |        194 |        194 |       0 |    0 |   518 |      0 |      0 |    0 |          0 |
+|   u_mem             | tiara_mem_simple |      24145 |      24145 |       0 |    0 | 82517 |      0 |      0 |    0 |          0 |
+|   u_mp              |         tiara_mp |       2947 |       2947 |       0 |    0 |  1695 |      2 |      0 |    0 |         10 |
+|     (u_mp)          |         tiara_mp |         79 |         79 |       0 |    0 |   135 |      0 |      0 |    0 |          0 |
+|     u_alu           |        tiara_alu |         51 |         51 |       0 |    0 |   179 |      0 |      0 |    0 |         10 |
+|     u_ls            | tiara_loop_stack |        304 |        304 |       0 |    0 |   420 |      0 |      0 |    0 |          0 |
+|     u_rf            |    tiara_regfile |       2508 |       2508 |       0 |    0 |   960 |      0 |      0 |    0 |          0 |
++---------------------+------------------+------------+------------+---------+------+-------+--------+--------+------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+

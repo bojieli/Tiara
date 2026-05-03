@@ -64,8 +64,9 @@ module tiara_mp
       S_MEM_WAIT  = 4'd6,
       S_MEM_ASYNC = 4'd7,
       S_WAIT      = 4'd8,
-      S_DONE      = 4'd9,
-      S_FAULT     = 4'd10
+      S_MUL_WAIT  = 4'd9,    // 2-cycle pipelined MUL: stall one cycle
+      S_DONE      = 4'd10,
+      S_FAULT     = 4'd11
   } state_e;
 
   state_e state, next_state;
@@ -158,14 +159,18 @@ module tiara_mp
   // -------------------------------------------------------------------
   logic [63:0] alu_y;
   logic        alu_z, alu_n;
+  logic        mul_issue;
   tiara_alu u_alu (
-      .sub   (sub),
-      .rs1   (rf_ra),
-      .rs2   (rf_rb),
-      .imm   (imm_signed),
-      .result(alu_y),
-      .z_flag(alu_z),
-      .n_flag(alu_n)
+      .clk      (clk),
+      .rst_n    (rst_n),
+      .sub      (sub),
+      .mul_issue(mul_issue),
+      .rs1      (rf_ra),
+      .rs2      (rf_rb),
+      .imm      (imm_signed),
+      .result   (alu_y),
+      .z_flag   (alu_z),
+      .n_flag   (alu_n)
   );
 
   // -------------------------------------------------------------------
@@ -293,6 +298,10 @@ module tiara_mp
             pc <= adjusted_next_pc;
           end
         end
+        S_MUL_WAIT: begin
+          instr_retired <= instr_retired + 1'b1;
+          pc <= adjusted_next_pc;
+        end
         S_DONE: begin
           task_done <= 1'b1;
         end
@@ -336,6 +345,7 @@ module tiara_mp
     rf_w_idx  = rd;
     rf_w_data = '0;
     rf_bulk_clear = 1'b0;
+    mul_issue     = 1'b0;
 
     ls_push = 1'b0; ls_pop = 1'b0; ls_dec = 1'b0; ls_flush = 1'b0;
     ls_in_begin = '0; ls_in_end = '0; ls_in_remain = '0;
@@ -395,11 +405,17 @@ module tiara_mp
           end
 
           OP_COMPUTE: begin
-            rf_we     = 1'b1;
-            rf_w_idx  = rd;
-            rf_w_data = alu_y;
-            advance_pc = 1'b1;
-            next_state = S_FETCH1;
+            // MUL takes one extra cycle through the pipelined ALU.
+            if (sub == SUB_MUL) begin
+              mul_issue  = 1'b1;
+              next_state = S_MUL_WAIT;
+            end else begin
+              rf_we      = 1'b1;
+              rf_w_idx   = rd;
+              rf_w_data  = alu_y;
+              advance_pc = 1'b1;
+              next_state = S_FETCH1;
+            end
           end
 
           OP_LOAD: begin
@@ -517,6 +533,15 @@ module tiara_mp
         end
       end
 
+      S_MUL_WAIT: begin
+        // After one cycle the pipelined product is ready in alu_y.
+        rf_we      = 1'b1;
+        rf_w_idx   = rd;
+        rf_w_data  = alu_y;
+        advance_pc = 1'b1;
+        next_state = S_FETCH1;
+      end
+
       S_DONE: begin
         // hold one cycle, then return to idle
         next_state = S_IDLE;
@@ -541,7 +566,8 @@ module tiara_mp
     pc_will_advance = (state == S_EXECUTE && advance_pc)
                     || (state == S_MEM_WAIT  && mem.sync_valid)
                     || (state == S_MEM_ASYNC && mem.cpy_accept)
-                    || (state == S_WAIT      && (inflight <= wait_threshold));
+                    || (state == S_WAIT      && (inflight <= wait_threshold))
+                    || (state == S_MUL_WAIT);
 
     // End-of-loop: only adjust on the cycle that actually advances PC.
     if (pc_will_advance && !ls_empty && (raw_next_pc == ls_top_end)) begin
