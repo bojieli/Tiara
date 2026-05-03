@@ -53,3 +53,5 @@ synth_app/
 eval/results/
 eval/figures/
 sim/verilator_app/build/
+synth_8mp/
+*.dcp
