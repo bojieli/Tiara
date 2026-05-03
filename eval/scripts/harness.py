@@ -455,21 +455,27 @@ def cmd_paged_attention(args):
     if args.out:
         out = Path(args.out)
         out.parent.mkdir(parents=True, exist_ok=True)
+        # Cap Tiara at the 100 GbE effective line rate.  The BFM does
+        # not model network bandwidth; the cap reflects the actual
+        # ceiling that the bitstream-level integration would observe.
+        LINE_RATE_GBPS = 12.1
         with out.open("w") as f:
             f.write("# PagedAttention throughput vs block size\n")
-            f.write("# Tiara measured by RTL; baselines analytical.\n")
+            f.write("# Tiara measured by RTL (capped at 100 GbE line rate);\n"
+                    "# baselines analytical.\n")
             f.write("# block_bytes Tiara_us Tiara_GBps RDMA_us RDMA_GBps "
                     "RPC_us  RPC_GBps  RedN_us RedN_GBps\n")
             TOTAL_GB = 8 * 1024 * 1024 / 1e9
             for bsize, lat, gbps, _ in rows:
+                gbps_capped = min(gbps, LINE_RATE_GBPS)
                 nb = TOTAL_BYTES // bsize
                 rdma_us = baseline_rdma_paged_attn(nb, bsize)
                 rpc_us  = baseline_rpc_paged_attn(nb, bsize)
                 redn_us = baseline_redn_paged_attn(nb, bsize)
-                f.write(f"{bsize:<10d}{lat:10.1f}{gbps:8.2f}"
-                        f"{rdma_us:10.1f}{TOTAL_GB/(rdma_us/1e6):8.2f}"
-                        f"{rpc_us:10.1f}{TOTAL_GB/(rpc_us/1e6):8.2f}"
-                        f"{redn_us:10.1f}{TOTAL_GB/(redn_us/1e6):8.2f}\n")
+                f.write(f"{bsize:<10d}{lat:10.1f}{gbps_capped:8.2f}"
+                        f"{rdma_us:10.1f}{min(LINE_RATE_GBPS,TOTAL_GB/(rdma_us/1e6)):8.2f}"
+                        f"{rpc_us:10.1f}{min(LINE_RATE_GBPS,TOTAL_GB/(rpc_us/1e6)):8.2f}"
+                        f"{redn_us:10.1f}{min(LINE_RATE_GBPS,TOTAL_GB/(redn_us/1e6)):8.2f}\n")
         print(f"wrote {out}")
     return 0
 
