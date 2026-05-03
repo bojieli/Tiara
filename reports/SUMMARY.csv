@@ -16,7 +16,7 @@ Tiara + Corundum app (post-route).LUT,28235
 Tiara + Corundum app (post-route).FF,86400
 Tiara + Corundum app (post-route).BRAM36,2
 Tiara + Corundum app (post-route).WNS_ns,0.077
-8-MP core (post-synth).LUT,-1
-8-MP core (post-synth).FF,-1
-8-MP core (post-synth).BRAM36,-1
-8-MP core (post-synth).WNS_ns,nan
+8-MP core (post-synth).LUT,224465
+8-MP core (post-synth).FF,676765
+8-MP core (post-synth).BRAM36,16
+8-MP core (post-synth).WNS_ns,1.187

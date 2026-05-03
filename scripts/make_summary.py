@@ -62,7 +62,7 @@ def _parse_util_rpt(path: Path) -> dict[str, int]:
         return out
     text = path.read_text()
     patterns = {
-        "LUT":      r"\|\s*CLB LUTs\s*\|\s*(\d+)",
+        "LUT":      r"\|\s*CLB LUTs\*?\s*\|\s*(\d+)",
         "FF":       r"\|\s*CLB Registers\s*\|\s*(\d+)",
         "BRAM36":   r"\|\s*Block RAM Tile\s*\|\s*(\d+)",
         "RAMB36":   r"\|\s*RAMB36/FIFO\*?\s*\|\s*(\d+)",
