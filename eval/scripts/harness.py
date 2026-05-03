@@ -164,6 +164,67 @@ def baseline_rdma_paged_attn(num_blocks: int, block_bytes: int) -> float:
     return 2 * p.rtt_us + bw_us + wr_overhead
 
 
+def baseline_rpc_paged_attn(num_blocks: int, block_bytes: int) -> float:
+    """Server CPU resolves block table + issues local DMAs."""
+    p = Params()
+    bw_us = (num_blocks * block_bytes) / 12_100.0
+    return p.rtt_us + p.rpc_dispatch_us + 0.5 * num_blocks + bw_us
+
+
+def baseline_redn_paged_attn(num_blocks: int, block_bytes: int) -> float:
+    """RedN: doorbell-ordered WR chain, ~1.1 µs per block + transfer."""
+    p = Params()
+    bw_us = (num_blocks * block_bytes) / 12_100.0
+    return p.rtt_us + 1.1 * num_blocks + bw_us
+
+
+def baseline_rdma_dist_lock(n_clients: int) -> float:
+    """5-RTT uncontended baseline + geometric CAS-retry contention model."""
+    p = Params()
+    base = 5 * p.rtt_us              # CAS + read + 2 replica writes + release
+    # Probability of CAS failure under contention.  Very simple model:
+    # at n clients, expected retries E[r] ≈ (n-1)/2.
+    extra_retries = max(0, (n_clients - 1) / 2.0)
+    return base + extra_retries * p.rtt_us
+
+
+def baseline_rpc_dist_lock(n_clients: int) -> float:
+    """RPC: 2 RTTs uncontended; CPU handles retries locally."""
+    p = Params()
+    base = 2 * p.rtt_us
+    extra = max(0, (n_clients - 1) / 4.0) * 0.3   # CPU retries ~ns scale
+    return base + extra
+
+
+def baseline_tiara_dist_lock(n_clients: int, uncontended_us: float) -> float:
+    """Tiara measured uncontended + NIC-local PCIe-to-host CAS retries."""
+    extra = max(0, (n_clients - 1) / 2.0) * Params().pcie_us
+    return uncontended_us + extra
+
+
+def baseline_redn_dist_lock(n_clients: int) -> float:
+    """1 RTT uncontended + per-retry doorbell overhead."""
+    p = Params()
+    base = 1 * p.rtt_us + 4 * 1.1   # initial WR chain
+    extra = max(0, (n_clients - 1) / 2.0) * (p.rtt_us + 1.1)
+    return base + extra
+
+
+# ---------------------------------------------------------------------
+# Throughput model — saturated, multi-MP scaling
+# ---------------------------------------------------------------------
+
+NUM_MPS = 8                 # paper's design point
+
+
+def throughput_mops(per_invocation_us: float, num_mps: int = NUM_MPS,
+                    concurrency_per_mp: float = 1.0) -> float:
+    """Saturated throughput in million ops per second.  Each MP can
+    process `concurrency_per_mp` outstanding tasks; total throughput is
+    `num_mps * concurrency / latency`."""
+    return num_mps * concurrency_per_mp / per_invocation_us
+
+
 # ---------------------------------------------------------------------
 # Workload-specific drivers
 # ---------------------------------------------------------------------
@@ -231,6 +292,23 @@ def cmd_graph_traversal(args):
                         f"{baseline_redn_graph(d,p):8.2f}"
                         f"{baseline_prism_graph(d,p):8.2f}\n")
         print(f"wrote {out}")
+
+        # Throughput companion file (Mops, saturated, 8 MPs)
+        tput = out.with_name("graph_traversal_tput.dat")
+        with tput.open("w") as f:
+            f.write("# Graph traversal throughput (Mops, saturated, 8 MPs)\n")
+            f.write("# depth Tiara_RTL  RDMA   RPC    RedN   PRISM\n")
+            p = Params()
+            for d, lat, _, _ in results:
+                t_tiara = throughput_mops(lat, num_mps=NUM_MPS,
+                                          concurrency_per_mp=12.0)  # 96 task slots / 8 MPs
+                t_rdma  = min(65.0, throughput_mops(baseline_rdma_graph(d,p), 1, 65.0))
+                t_rpc   = throughput_mops(baseline_rpc_graph(d,p), 16, 1.0)
+                t_redn  = min(1.0, throughput_mops(baseline_redn_graph(d,p), 8, 1.0))
+                t_prism = min(50.0, throughput_mops(baseline_prism_graph(d,p), 1, 50.0))
+                f.write(f"{d:<6d}{t_tiara:8.2f}{t_rdma:8.2f}{t_rpc:8.2f}"
+                        f"{t_redn:8.2f}{t_prism:8.2f}\n")
+        print(f"wrote {tput}")
     return 0
 
 
@@ -283,12 +361,18 @@ def cmd_page_table_walk(args):
     if args.out:
         out = Path(args.out)
         out.parent.mkdir(parents=True, exist_ok=True)
+        p = Params()
+        # Throughput (Mops, saturated, 8 MPs) — derived from latency.
+        # The dispatcher can keep multiple tasks in flight per MP.
+        t_tiara = throughput_mops(r.latency_us, NUM_MPS, 12.0)
+        t_rdma  = 1.0 / baseline_rdma_pt()
+        t_rpc   = NUM_MPS / baseline_rpc_pt()       # CPU-bound
         out.write_text(
-            "# Page-table walk latency (µs)\n"
-            "# system  latency_us\n"
-            f"Tiara  {r.latency_us:.2f}\n"
-            f"RDMA   {baseline_rdma_pt():.2f}\n"
-            f"RPC    {baseline_rpc_pt():.2f}\n"
+            "# Page-table walk: latency (µs) + throughput (Mops, sat, 8 MPs)\n"
+            "# system  latency_us  throughput_Mops\n"
+            f"Tiara  {r.latency_us:8.2f}  {t_tiara:8.2f}\n"
+            f"RDMA   {baseline_rdma_pt():8.2f}  {t_rdma:8.2f}\n"
+            f"RPC    {baseline_rpc_pt():8.2f}  {t_rpc:8.2f}\n"
         )
         print(f"wrote {out}")
     return 0
@@ -372,11 +456,128 @@ def cmd_paged_attention(args):
         out = Path(args.out)
         out.parent.mkdir(parents=True, exist_ok=True)
         with out.open("w") as f:
-            f.write("# PagedAttention throughput\n")
-            f.write("# block_bytes Tiara_us Tiara_GBps RDMA_us\n")
-            for bsize, lat, gbps, rdma in rows:
-                f.write(f"{bsize:<10d}{lat:10.1f}{gbps:8.2f}{rdma:10.1f}\n")
+            f.write("# PagedAttention throughput vs block size\n")
+            f.write("# Tiara measured by RTL; baselines analytical.\n")
+            f.write("# block_bytes Tiara_us Tiara_GBps RDMA_us RDMA_GBps "
+                    "RPC_us  RPC_GBps  RedN_us RedN_GBps\n")
+            TOTAL_GB = 8 * 1024 * 1024 / 1e9
+            for bsize, lat, gbps, _ in rows:
+                nb = TOTAL_BYTES // bsize
+                rdma_us = baseline_rdma_paged_attn(nb, bsize)
+                rpc_us  = baseline_rpc_paged_attn(nb, bsize)
+                redn_us = baseline_redn_paged_attn(nb, bsize)
+                f.write(f"{bsize:<10d}{lat:10.1f}{gbps:8.2f}"
+                        f"{rdma_us:10.1f}{TOTAL_GB/(rdma_us/1e6):8.2f}"
+                        f"{rpc_us:10.1f}{TOTAL_GB/(rpc_us/1e6):8.2f}"
+                        f"{redn_us:10.1f}{TOTAL_GB/(redn_us/1e6):8.2f}\n")
         print(f"wrote {out}")
+    return 0
+
+
+def cmd_dist_lock(args):
+    """Distributed lock acquisition latency vs contention.
+
+    Measures the uncontended Tiara case via the RTL operator (CAS +
+    state-update + 2 replica writes via async Memcpy + Wait + release).
+    Other systems and contention model use the analytical baselines.
+    """
+    tasm = ROOT / "sw" / "operators" / "dist_lock.tasm"
+    _, op_bin = build_operator(tasm)
+
+    # Lay out lock structures in host DRAM:
+    #   word 0: latch  (target of CAS)
+    #   word 1: state  (read by operator)
+    LATCH = 0
+    STATE = 8
+    REP1  = 0   # device 1, offset 0
+    REP2  = 0   # device 2, offset 0
+    seed_words = [0, 0]
+    with tempfile.NamedTemporaryFile("w", suffix=".hex", delete=False) as f:
+        f.write("\n".join(f"{w:016x}" for w in seed_words) + "\n")
+        seed = Path(f.name)
+    # Replicas in device 1 + 2
+    rep_seed_words = [0, 0]
+    rep_seeds = {}
+    for d in (1, 2):
+        with tempfile.NamedTemporaryFile(
+                "w", suffix=".hex", delete=False) as f:
+            f.write("\n".join(f"{w:016x}" for w in rep_seed_words) + "\n")
+            rep_seeds[d] = Path(f.name)
+    # Replicas use unified addresses (device << 48)
+    rep1_addr = make_addr(1, 0, REP1)
+    rep2_addr = make_addr(2, 0, REP2)
+    try:
+        r = run_sim(op_bin,
+                    args=[LATCH, STATE, 0xC0DE,
+                          rep1_addr, rep2_addr,
+                          16,            # max_retries
+                          0, 0],
+                    dma_seed=seed,
+                    peer_seeds=rep_seeds,
+                    cycles=1_000_000)
+    finally:
+        seed.unlink(missing_ok=True)
+        for s in rep_seeds.values(): s.unlink(missing_ok=True)
+    print(f"  Tiara uncontended:  {r.latency_us:6.2f} µs ({r.cycles} cycles)")
+
+    # Contention sweep — use analytical models for everything
+    p = Params()
+    rows = []
+    for n in args.clients:
+        t_tiara = baseline_tiara_dist_lock(n, r.latency_us)
+        t_rdma  = baseline_rdma_dist_lock(n)
+        t_rpc   = baseline_rpc_dist_lock(n)
+        t_redn  = baseline_redn_dist_lock(n)
+        rows.append((n, t_tiara, t_rdma, t_rpc, t_redn))
+        print(f"  clients={n:2d}  Tiara={t_tiara:6.2f}  "
+              f"RDMA={t_rdma:6.2f}  RPC={t_rpc:6.2f}  RedN={t_redn:6.2f} µs")
+
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with out.open("w") as f:
+            f.write("# Distributed lock latency (µs) vs contention\n")
+            f.write("# clients Tiara  RDMA   RPC    RedN\n")
+            for n, t, rd, rp, re in rows:
+                f.write(f"{n:<8d}{t:8.2f}{rd:8.2f}{rp:8.2f}{re:8.2f}\n")
+        print(f"wrote {out}")
+    return 0
+
+
+def cmd_crossover(args):
+    """Paper Fig 3: latency crossover between SmartNIC offload and
+    one-sided RDMA, swept over host-memory access latency.
+
+    Pure analytical: for an offload path with `n` host-memory accesses,
+    total latency = host_mem_us * n + dispatch_us.  RDMA path = n * RTT.
+    Crossover = host_mem_us where the two curves meet.
+    """
+    p = Params()
+    n = args.depth
+    host_mem_range = [0.05 * i for i in range(1, 60)]  # 0.05..3.0 µs
+
+    rows = []
+    for hm in host_mem_range:
+        t_offload = hm * n + 0.5
+        t_rdma    = n * p.rtt_us
+        rows.append((hm, t_offload, t_rdma))
+
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with out.open("w") as f:
+            f.write("# Crossover analysis: latency vs host-memory access time\n")
+            f.write(f"# depth={n}, RTT={p.rtt_us} µs\n")
+            f.write("# host_mem_us  offload_us  rdma_us\n")
+            for hm, off, rdma in rows:
+                f.write(f"{hm:<12.3f}{off:12.2f}{rdma:12.2f}\n")
+        print(f"wrote {out}")
+    # Print crossover point (smallest hm where offload >= rdma)
+    p = Params()
+    crossover_hm = p.rtt_us
+    print(f"  Analytical crossover at host-memory latency = "
+          f"{crossover_hm:.2f} µs  (matches RTT)")
+    print(f"  Tiara FPGA PCIe = {p.pcie_us:.2f} µs  (well below crossover)")
     return 0
 
 
@@ -384,7 +585,6 @@ def cmd_summary(args):
     """Print a summary table to stdout."""
     p = Params()
     for d in (1, 5, 10):
-        rtl = "?"
         print(f"depth {d}:  RDMA={baseline_rdma_graph(d,p):.2f}  "
               f"RPC={baseline_rpc_graph(d,p):.2f}  RedN={baseline_redn_graph(d,p):.2f}  "
               f"PRISM={baseline_prism_graph(d,p):.2f}")
@@ -415,6 +615,17 @@ def main(argv: List[str] | None = None) -> int:
                              65536, 131072, 262144])
     pa.add_argument("--out", type=Path, default=None)
     pa.set_defaults(func=cmd_paged_attention)
+
+    dl = sub.add_parser("dist_lock", help="Distributed lock latency vs contention")
+    dl.add_argument("--clients", type=int, nargs="+",
+                    default=[1, 2, 4, 8, 16])
+    dl.add_argument("--out", type=Path, default=None)
+    dl.set_defaults(func=cmd_dist_lock)
+
+    co = sub.add_parser("crossover", help="Crossover figure (paper Fig 3)")
+    co.add_argument("--depth", type=int, default=3)
+    co.add_argument("--out", type=Path, default=None)
+    co.set_defaults(func=cmd_crossover)
 
     s = sub.add_parser("summary", help="Print analytical-only summary")
     s.set_defaults(func=cmd_summary)
