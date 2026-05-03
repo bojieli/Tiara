@@ -1,0 +1,42 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
+| Date         : Sun May  3 15:28:27 2026
+| Host         : ubuntu running 64-bit Ubuntu 22.04.5 LTS
+| Command      : report_utilization -hierarchical -file /home/ubuntu/Tiara/synth_app/util_hier_post_route.rpt
+| Design       : mqnic_app_block
+| Device       : xcu50-fsvh2104-2-e
+| Speed File   : -2
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++---------------------+------------------+------------+------------+---------+------+-------+--------+--------+------+------------+
+|       Instance      |      Module      | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs  | RAMB36 | RAMB18 | URAM | DSP Blocks |
++---------------------+------------------+------------+------------+---------+------+-------+--------+--------+------+------------+
+| mqnic_app_block     |            (top) |      28235 |      28235 |       0 |    0 | 86400 |      2 |      0 |    0 |         10 |
+|   (mqnic_app_block) |            (top) |          0 |          0 |       0 |    0 |     3 |      0 |      0 |    0 |          0 |
+|   u_tiara_axil      | tiara_axil_slave |        273 |        273 |       0 |    0 |   932 |      0 |      0 |    0 |          0 |
+|   u_tiara_core      |  tiara_synth_top |      27291 |      27291 |       0 |    0 | 84707 |      2 |      0 |    0 |         10 |
+|     u_disp          | tiara_dispatcher |        196 |        196 |       0 |    0 |   518 |      0 |      0 |    0 |          0 |
+|     u_mem           | tiara_mem_simple |      24142 |      24142 |       0 |    0 | 82502 |      0 |      0 |    0 |          0 |
+|     u_mp            |         tiara_mp |       2953 |       2953 |       0 |    0 |  1687 |      2 |      0 |    0 |         10 |
+|       (u_mp)        |         tiara_mp |         85 |         85 |       0 |    0 |   127 |      0 |      0 |    0 |          0 |
+|       u_alu         |        tiara_alu |         51 |         51 |       0 |    0 |   179 |      0 |      0 |    0 |         10 |
+|       u_ls          | tiara_loop_stack |        304 |        304 |       0 |    0 |   420 |      0 |      0 |    0 |          0 |
+|       u_rf          |    tiara_regfile |       2506 |       2506 |       0 |    0 |   960 |      0 |      0 |    0 |          0 |
+|   u_tiara_rx        |  tiara_rx_filter |        290 |        290 |       0 |    0 |   635 |      0 |      0 |    0 |          0 |
+|   u_tiara_tx        |    tiara_tx_resp |          1 |          1 |       0 |    0 |   117 |      0 |      0 |    0 |          0 |
+|   u_tiara_tx_arb    |     tiara_tx_arb |        381 |        381 |       0 |    0 |     6 |      0 |      0 |    0 |          0 |
++---------------------+------------------+------------+------------+---------+------+-------+--------+--------+------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+
