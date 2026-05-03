@@ -1,0 +1,27 @@
+# Build artifacts
+sim/verilator/build/
+sw/client/*.o
+sw/client/*.a
+sw/client/*.so
+
+# Generated operator binaries
+sw/operators/*.bin
+sw/operators/*.hex
+
+# Eval outputs
+eval/results/
+eval/figures/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# OS
+.DS_Store

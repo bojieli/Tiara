@@ -1,0 +1,29 @@
+// graph_walk.tasm — depth-limited pointer chase through linked nodes.
+//
+// Each node is laid out as:
+//   offset 0:  data field (64 bit)
+//   offset 8:  next pointer (64-bit unified address; offset within
+//              same region for the simulator)
+//
+// Args (via dispatcher r1..r8):
+//   r1 = start_node_addr     (unified address, device 0)
+//   r2 = depth               (number of hops to chase; >= 1)
+//
+// Returns:
+//   r1 = data field of the final node visited
+//   r2 = address of the final node
+
+  .arg cur    r1
+  .arg depth  r2
+
+  // Bounded loop: chase `depth` pointers.  Each iteration overwrites
+  // r1 with the next-pointer at offset 8 of the current node.
+  LOOP r2, walk_end          // body length 1: exactly one LOAD
+  LOAD r1, [r1 + 8]
+
+walk_end:
+  // r1 now holds the address of the final node; load its data field
+  // into r3 and place node-address into r2 for the return slot.
+  ADDI r2, r1, 0             // r2 = r1 (address of final node)
+  LOAD r1, [r1 + 0]          // r1 = final data
+  RET  r1

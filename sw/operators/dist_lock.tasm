@@ -1,0 +1,61 @@
+// dist_lock.tasm — distributed lock acquisition with replication.
+//
+// Mirrors Figure 5 of the paper: CAS-acquire latch, update local state,
+// async-replicate to two replicas, wait for ACKs, then release.
+//
+// Args (r1..r8):
+//   r1 = latch addr (local, device 0)
+//   r2 = state addr (local, device 0)
+//   r3 = newVal     (value to write into state)
+//   r4 = replica1 addr (unified)
+//   r5 = replica2 addr (unified)
+//   r6 = max_retries
+//
+// Returns:
+//   r1 = 0 if acquired, FAIL_CODE if exhausted retries
+//   r2 = old state value (only valid when r1 == 0)
+
+  .arg latch    r1
+  .arg state    r2
+  .arg newVal   r3
+  .arg rep1     r4
+  .arg rep2     r5
+  .arg retries  r6
+
+  .const FAIL_CODE = 0xDEAD
+
+  // Bounded CAS retry: r6 controls iteration count.
+  LOOP r6, retry_end
+  LI   r7, 0                   // expected = 0 (unlocked)
+  LI   r8, 1                   // new = 1     (locked by us)
+  CAS  r9, r1, r7, r8          // r9 = previous value of latch
+  // r9 == 0 means we acquired it.  Use EQ to set r10 to 1 if eq 0.
+  LI   r11, 0
+  EQ   r10, r9, r11
+  // If r10 != 0 (i.e. we acquired), jump out of the loop body — the
+  // verifier requires forward-only jumps and the loop body is exactly
+  // 8 instructions long, so we jump to the end-of-body label.
+  JUMP r10, retry_end
+retry_end:
+
+  // After the loop body retry semantics: if r10 != 0 we acquired, else
+  // we exhausted retries.  Test r10 for the success path.
+  JUMP r10, acquired
+  LI   r1, 0xDEAD
+  RET  r1
+
+acquired:
+  LOAD r2, [r2 + 0]            // r2 = old state value
+  STORE [r2 + 0], r3           // overwrite state
+
+  // Replicate to two remote nodes asynchronously, then wait for both
+  // to acknowledge.
+  MEMCPY r12, r4, r2, ASYNC, LEN=8
+  MEMCPY r13, r5, r2, ASYNC, LEN=8
+  WAIT 0
+
+  // Release the latch
+  LI    r7, 0
+  STORE [r1 + 0], r7
+  LI    r1, 0
+  RET   r1

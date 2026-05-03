@@ -1,0 +1,22 @@
+[operator]
+name        = "graph_walk"
+version     = 1
+max_dynamic = 1024
+
+[[arguments]]
+name   = "start"
+reg    = 1
+bounds = [0, 0x7FFFFFF8]
+device = 0
+region = 0
+
+[[arguments]]
+name   = "depth"
+reg    = 2
+bounds = [0, 64]
+
+[[regions]]
+id     = 0
+device = 0
+name   = "graph_pool"
+size   = 0x80000000
