@@ -76,7 +76,14 @@ module tiara_pcie_dma
   // Backing memory.  Public so the C++ BFM can poke it via its
   // hierarchical path (verilator allows `+access+rw`).
   // -------------------------------------------------------------------
+  localparam int unsigned AW = $clog2(MEM_DEPTH);   // word index width
   (* ram_style = "block" *) logic [63:0] mem [0:MEM_DEPTH-1];
+
+  // Helper: extract the in-range word index from a byte address
+  // (drops the bottom 3 bits + the high address bits beyond AW).
+  function automatic logic [AW-1:0] word_idx(logic [ADDR_BITS-1:0] addr);
+    word_idx = addr[AW + 2 : 3];
+  endfunction
 
 `ifndef SYNTHESIS
   initial begin
@@ -203,11 +210,11 @@ module tiara_pcie_dma
             unique case (s_kind[i])
               KIND_READ: begin
                 rd_valid <= 1'b1;
-                rd_data  <= mem[s_addr_a[i][ADDR_BITS-1:3]];
+                rd_data  <= mem[word_idx(s_addr_a[i])];
                 rd_err   <= 1'b0;
               end
               KIND_WRITE: begin
-                mem[s_addr_a[i][ADDR_BITS-1:3]] <= s_data_a[i];
+                mem[word_idx(s_addr_a[i])] <= s_data_a[i];
                 wr_done <= 1'b1;
               end
               KIND_CPY: begin
@@ -221,16 +228,16 @@ module tiara_pcie_dma
               end
               KIND_CAS: begin
                 atom_valid <= 1'b1;
-                atom_data  <= mem[s_addr_a[i][ADDR_BITS-1:3]];
-                if (mem[s_addr_a[i][ADDR_BITS-1:3]] == s_data_a[i]) begin
-                  mem[s_addr_a[i][ADDR_BITS-1:3]] <= s_data_b[i];
+                atom_data  <= mem[word_idx(s_addr_a[i])];
+                if (mem[word_idx(s_addr_a[i])] == s_data_a[i]) begin
+                  mem[word_idx(s_addr_a[i])] <= s_data_b[i];
                 end
               end
               KIND_CAA: begin
                 atom_valid <= 1'b1;
-                atom_data  <= mem[s_addr_a[i][ADDR_BITS-1:3]];
-                mem[s_addr_a[i][ADDR_BITS-1:3]] <=
-                    mem[s_addr_a[i][ADDR_BITS-1:3]] + s_data_a[i];
+                atom_data  <= mem[word_idx(s_addr_a[i])];
+                mem[word_idx(s_addr_a[i])] <=
+                    mem[word_idx(s_addr_a[i])] + s_data_a[i];
               end
               default: ;
             endcase

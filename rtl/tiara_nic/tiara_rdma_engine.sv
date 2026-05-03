@@ -76,6 +76,13 @@ module tiara_rdma_engine
   end
 `endif
 
+  // Word index helpers (clean WIDTH lint warnings).
+  localparam int unsigned PAW = $clog2(MEM_DEPTH);
+
+  function automatic logic [PAW-1:0] pword_idx(logic [31:0] addr);
+    pword_idx = addr[PAW + 2 : 3];
+  endfunction
+
   // -------------------------------------------------------------------
   // In-flight tracking — same pattern as the PCIe DMA
   // -------------------------------------------------------------------
@@ -191,11 +198,11 @@ module tiara_rdma_engine
             unique case (s_kind[i])
               KIND_READ: begin
                 rd_valid <= 1'b1;
-                rd_data  <= peer_mem[dev_a_idx][s_addr_a[i][31:3]];
+                rd_data  <= peer_mem[dev_a_idx][pword_idx(s_addr_a[i])];
                 rd_err   <= (s_dev_a[i] >= NUM_PEERS);
               end
               KIND_WRITE: begin
-                peer_mem[dev_a_idx][s_addr_a[i][31:3]] <= s_data_a[i];
+                peer_mem[dev_a_idx][pword_idx(s_addr_a[i])] <= s_data_a[i];
                 wr_done <= 1'b1;
               end
               KIND_CPY: begin
@@ -205,16 +212,16 @@ module tiara_rdma_engine
               end
               KIND_CAS: begin
                 atom_valid <= 1'b1;
-                atom_data  <= peer_mem[dev_a_idx][s_addr_a[i][31:3]];
-                if (peer_mem[dev_a_idx][s_addr_a[i][31:3]] == s_data_a[i]) begin
-                  peer_mem[dev_a_idx][s_addr_a[i][31:3]] <= s_data_b[i];
+                atom_data  <= peer_mem[dev_a_idx][pword_idx(s_addr_a[i])];
+                if (peer_mem[dev_a_idx][pword_idx(s_addr_a[i])] == s_data_a[i]) begin
+                  peer_mem[dev_a_idx][pword_idx(s_addr_a[i])] <= s_data_b[i];
                 end
               end
               KIND_CAA: begin
                 atom_valid <= 1'b1;
-                atom_data  <= peer_mem[dev_a_idx][s_addr_a[i][31:3]];
-                peer_mem[dev_a_idx][s_addr_a[i][31:3]] <=
-                    peer_mem[dev_a_idx][s_addr_a[i][31:3]] + s_data_a[i];
+                atom_data  <= peer_mem[dev_a_idx][pword_idx(s_addr_a[i])];
+                peer_mem[dev_a_idx][pword_idx(s_addr_a[i])] <=
+                    peer_mem[dev_a_idx][pword_idx(s_addr_a[i])] + s_data_a[i];
               end
               default: ;
             endcase

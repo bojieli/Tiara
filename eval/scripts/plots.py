@@ -1,20 +1,91 @@
-"""Generate paper-style plots from `eval/results/*.dat`."""
+"""Generate publication-quality plots from `eval/results/*.dat`.
+
+Output formats: PNG (preview), PDF (camera-ready), EPS (legacy).  All
+use Type-1 fonts (matplotlib `pdf.fonttype=42`), serif Computer Modern,
+8pt body / 9pt axis labels matching ACM acmart.  Single-column figures
+are 3.4 inches wide; double-column 7.0 inches.
+
+Color palette is the colorblind-safe Tableau 8-color set, used
+consistently across every figure so a reader can identify a system at
+a glance.
+"""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT    = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "eval" / "results"
 FIGS    = ROOT / "eval" / "figures"
 
 
+# ---------------------------------------------------------------------
+# Style — applied once at import time so every figure looks the same.
+# ---------------------------------------------------------------------
+def _setup_matplotlib():
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except Exception as exc:
+        print(f"matplotlib unavailable ({exc!r}); skipping plot rendering",
+              file=sys.stderr)
+        return None
+    matplotlib.rcParams.update({
+        "pdf.fonttype":      42,        # TrueType (works as Type-1 in PDF/EPS)
+        "ps.fonttype":       42,
+        "font.family":       "serif",
+        "font.serif":        ["DejaVu Serif", "Computer Modern Roman", "Times"],
+        "font.size":          8,
+        "axes.titlesize":     9,
+        "axes.labelsize":     9,
+        "xtick.labelsize":    8,
+        "ytick.labelsize":    8,
+        "legend.fontsize":    7.5,
+        "legend.frameon":     False,
+        "axes.spines.top":    False,
+        "axes.spines.right":  False,
+        "axes.grid":          True,
+        "grid.alpha":         0.25,
+        "grid.linestyle":     ":",
+        "lines.linewidth":    1.4,
+        "lines.markersize":   4,
+        "axes.prop_cycle":    matplotlib.rcParamsDefault["axes.prop_cycle"],
+    })
+    # Colorblind-safe palette (Wong 2011) — first 6 are paired so
+    # graph_traversal: Tiara=blue, RDMA=red, RPC=green, RedN=orange,
+    # PRISM=purple by index in the line list.
+    matplotlib.rcParams["axes.prop_cycle"] = matplotlib.cycler(
+        color=[
+            "#0072B2",  # blue       — Tiara
+            "#D55E00",  # vermillion — RDMA
+            "#009E73",  # green      — RPC
+            "#E69F00",  # orange     — RedN
+            "#CC79A7",  # pink       — PRISM
+            "#56B4E9",  # sky blue
+            "#F0E442",  # yellow
+            "#000000",  # black
+        ])
+    return plt
+
+
+SYSTEM_LABELS = {
+    "Tiara_RTL": "Tiara",
+    "Tiara":     "Tiara",
+    "RDMA":      "RDMA (one-sided)",
+    "RPC":       "RPC (eRPC-style)",
+    "RedN":      "RedN",
+    "PRISM":     "PRISM",
+}
+
+
+# ---------------------------------------------------------------------
+# Data loading
+# ---------------------------------------------------------------------
 def _load_columns(path: Path) -> dict:
-    """Return {header_token: [values]} for a `# header` row.  The header
-    is taken to be the LAST `# ...` line that has at least 2 tokens and
-    whose token count matches the first data row's column count.
-    """
+    """Return {header_token: [values]}.  Header is the LAST `# ...` line
+    that has the same number of tokens as the first data row."""
     candidate_headers: list[list[str]] = []
     cols: dict[str, list] = {}
     rows: list[list] = []
@@ -48,203 +119,175 @@ def _load_columns(path: Path) -> dict:
     return cols
 
 
-def _try_matplotlib():
-    try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-        return plt
-    except Exception as exc:
-        print(f"matplotlib unavailable ({exc!r}); skipping plot rendering",
-              file=sys.stderr)
-        return None
+def _save(fig, name: str):
+    """Save the figure as PNG + PDF + EPS (all three for camera-ready
+    flexibility).  PNG is for previews and READMEs; PDF/EPS for the
+    paper itself."""
+    FIGS.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    for ext in ("png", "pdf", "eps"):
+        out = FIGS / f"{name}.{ext}"
+        try:
+            fig.savefig(out, dpi=300, bbox_inches="tight")
+            print(f"wrote {out}")
+        except Exception as exc:
+            print(f"  (skipping {out}: {exc})", file=sys.stderr)
 
 
-def plot_graph(plt):
+# ---------------------------------------------------------------------
+# Individual figures
+# ---------------------------------------------------------------------
+def plot_graph_latency(plt):
     p = RESULTS / "graph_traversal.dat"
-    if not p.exists():
-        return
+    if not p.exists(): return
     cols = _load_columns(p)
-    fig, ax = plt.subplots(figsize=(4.5, 3.0))
+    fig, ax = plt.subplots(figsize=(3.4, 2.3))
     depths = cols["depth"]
-    for label, key in [("Tiara",  "Tiara_RTL"),
-                       ("RDMA",   "RDMA"),
-                       ("RPC",    "RPC"),
-                       ("RedN",   "RedN"),
-                       ("PRISM",  "PRISM")]:
+    for label, key, marker, ls in [
+            ("Tiara",  "Tiara_RTL", "o", "-"),
+            ("RDMA",   "RDMA",       "s", "-"),
+            ("RPC",    "RPC",        "^", "-"),
+            ("RedN",   "RedN",       "D", "--"),
+            ("PRISM",  "PRISM",      "v", "--")]:
         if key in cols:
-            ax.plot(depths, cols[key], marker="o", label=label)
+            ax.plot(depths, cols[key], marker=marker, linestyle=ls,
+                    label=label)
     ax.set_xlabel("Traversal depth (hops)")
-    ax.set_ylabel("Latency (µs)")
-    ax.set_title("Graph traversal latency vs. depth")
-    ax.legend(); ax.grid(True, alpha=0.3)
-    out = FIGS / "graph_traversal.png"
-    fig.tight_layout()
-    fig.savefig(out, dpi=140)
-    print(f"wrote {out}")
+    ax.set_ylabel("Latency ($\\mu$s)")
+    ax.set_xticks(range(1, max([int(d) for d in depths]) + 1, 1))
+    ax.set_xlim(left=0.7, right=max([int(d) for d in depths]) + 0.3)
+    ax.legend(loc="upper left", ncol=1)
+    _save(fig, "graph_traversal")
 
 
-def plot_ptwalk(plt):
-    p = RESULTS / "pt_walk.dat"
-    if not p.exists():
-        return
-    cols = _load_columns(p)
-    if "system" not in cols:
-        return
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    sys_names = cols["system"]
-    lats      = cols.get("latency_us", [])
-    if not lats and "col1" in cols:
-        lats = cols["col1"]
-    ax.bar(sys_names, lats, color=["#1f77b4", "#d62728", "#2ca02c"])
-    ax.set_ylabel("Latency (µs)")
-    ax.set_title("Page-table walk")
-    for i, v in enumerate(lats):
-        ax.text(i, v, f"{v:.1f}", ha="center", va="bottom")
-    out = FIGS / "pt_walk.png"
-    fig.tight_layout()
-    fig.savefig(out, dpi=140)
-    print(f"wrote {out}")
-
-
-def plot_paged(plt):
-    p = RESULTS / "paged_attention.dat"
-    if not p.exists():
-        return
-    cols = _load_columns(p)
-    fig, ax = plt.subplots(figsize=(4.5, 3.0))
-    bs = cols.get("block_bytes", [])
-    tg = cols.get("Tiara_GBps", [])
-    if bs and tg:
-        ax.plot(bs, tg, marker="o", label="Tiara (sim)")
-    if "Tiara_us" in cols and "RDMA_us" in cols and bs:
-        # Compute RDMA throughput from RDMA_us and total payload (8 MB)
-        rdma_gbps = [(8 * 1024 * 1024 / 1e9) / (us / 1e6)
-                     for us in cols["RDMA_us"]]
-        ax.plot(bs, rdma_gbps, marker="s", label="RDMA (analytical)")
-    ax.set_xscale("log", base=2)
-    ax.set_xlabel("Block size (bytes)")
-    ax.set_ylabel("Effective throughput (GB/s)")
-    ax.set_title("PagedAttention throughput vs. block size")
-    ax.legend(); ax.grid(True, alpha=0.3)
-    out = FIGS / "paged_attention.png"
-    fig.tight_layout()
-    fig.savefig(out, dpi=140)
-    print(f"wrote {out}")
-
-
-def plot_graph_tput(plt):
+def plot_graph_throughput(plt):
     p = RESULTS / "graph_traversal_tput.dat"
-    if not p.exists():
-        return
+    if not p.exists(): return
     cols = _load_columns(p)
-    if "depth" not in cols:
-        return
-    fig, ax = plt.subplots(figsize=(4.5, 3.0))
+    fig, ax = plt.subplots(figsize=(3.4, 2.3))
     depths = cols["depth"]
-    for label, key in [("Tiara",  "Tiara_RTL"),
-                       ("RDMA",   "RDMA"),
-                       ("RPC",    "RPC"),
-                       ("RedN",   "RedN"),
-                       ("PRISM",  "PRISM")]:
+    for label, key, marker, ls in [
+            ("Tiara",  "Tiara_RTL", "o", "-"),
+            ("RDMA",   "RDMA",       "s", "-"),
+            ("RPC",    "RPC",        "^", "-"),
+            ("RedN",   "RedN",       "D", "--"),
+            ("PRISM",  "PRISM",      "v", "--")]:
         if key in cols:
-            ax.plot(depths, cols[key], marker="o", label=label)
+            ax.plot(depths, cols[key], marker=marker, linestyle=ls,
+                    label=label)
     ax.set_yscale("log")
     ax.set_xlabel("Traversal depth (hops)")
     ax.set_ylabel("Throughput (Mops, log)")
-    ax.set_title("Graph traversal throughput (saturated, 8 MPs)")
-    ax.legend(); ax.grid(True, alpha=0.3, which="both")
-    out = FIGS / "graph_throughput.png"
-    fig.tight_layout()
-    fig.savefig(out, dpi=140)
-    print(f"wrote {out}")
+    ax.set_xticks(range(1, max([int(d) for d in depths]) + 1, 1))
+    ax.set_xlim(left=0.7, right=max([int(d) for d in depths]) + 0.3)
+    ax.legend(loc="lower left", ncol=2)
+    _save(fig, "graph_throughput")
+
+
+def plot_pt_walk(plt):
+    p = RESULTS / "pt_walk.dat"
+    if not p.exists(): return
+    cols = _load_columns(p)
+    if "system" not in cols:
+        return
+    fig, ax = plt.subplots(figsize=(2.6, 2.3))
+    sys_names = cols["system"]
+    lats = cols.get("latency_us")
+    palette = ["#0072B2", "#D55E00", "#009E73"]
+    bars = ax.bar(sys_names, lats, color=palette[:len(sys_names)],
+                  edgecolor="black", linewidth=0.5)
+    ax.set_ylabel("Latency ($\\mu$s)")
+    ax.set_title("3-level page-table walk")
+    for b, v in zip(bars, lats):
+        ax.text(b.get_x() + b.get_width()/2, v + 0.2, f"{v:.1f}",
+                ha="center", va="bottom", fontsize=7)
+    ax.set_ylim(top=max(lats) * 1.18)
+    _save(fig, "pt_walk")
 
 
 def plot_dist_lock(plt):
     p = RESULTS / "dist_lock.dat"
-    if not p.exists():
-        return
+    if not p.exists(): return
     cols = _load_columns(p)
-    if "clients" not in cols:
-        return
-    fig, ax = plt.subplots(figsize=(4.5, 3.0))
+    if "clients" not in cols: return
+    fig, ax = plt.subplots(figsize=(3.4, 2.3))
     clients = cols["clients"]
-    for label, key in [("Tiara", "Tiara"), ("RDMA", "RDMA"),
-                       ("RPC", "RPC"),     ("RedN", "RedN")]:
+    for label, key, marker, ls in [
+            ("Tiara", "Tiara", "o", "-"),
+            ("RDMA",  "RDMA",  "s", "-"),
+            ("RPC",   "RPC",   "^", "-"),
+            ("RedN",  "RedN",  "D", "--")]:
         if key in cols:
-            ax.plot(clients, cols[key], marker="o", label=label)
+            ax.plot(clients, cols[key], marker=marker, linestyle=ls,
+                    label=label)
     ax.set_xlabel("Contending clients")
-    ax.set_ylabel("Latency (µs)")
-    ax.set_title("Distributed lock acquisition under contention")
-    ax.legend(); ax.grid(True, alpha=0.3)
-    out = FIGS / "dist_lock.png"
-    fig.tight_layout()
-    fig.savefig(out, dpi=140)
-    print(f"wrote {out}")
+    ax.set_ylabel("Latency ($\\mu$s)")
+    ax.set_xscale("log", base=2)
+    ax.set_xticks(clients)
+    ax.set_xticklabels([str(int(c)) for c in clients])
+    ax.legend(loc="upper left")
+    _save(fig, "dist_lock")
+
+
+def plot_paged(plt):
+    p = RESULTS / "paged_attention.dat"
+    if not p.exists(): return
+    cols = _load_columns(p)
+    if "block_bytes" not in cols: return
+    fig, ax = plt.subplots(figsize=(3.4, 2.3))
+    bs = cols["block_bytes"]
+    for label, key, marker, ls in [
+            ("Tiara",  "Tiara_GBps", "o", "-"),
+            ("RDMA",   "RDMA_GBps",  "s", "-"),
+            ("RPC",    "RPC_GBps",   "^", "-"),
+            ("RedN",   "RedN_GBps",  "D", "--")]:
+        if key in cols:
+            ax.plot(bs, cols[key], marker=marker, linestyle=ls,
+                    label=label)
+    ax.set_xscale("log", base=2)
+    ax.set_xlabel("KV block size (bytes, log)")
+    ax.set_ylabel("Throughput (GB/s)")
+    ax.legend(loc="upper left")
+    _save(fig, "paged_attention")
 
 
 def plot_crossover(plt):
     p = RESULTS / "crossover.dat"
-    if not p.exists():
-        return
+    if not p.exists(): return
     cols = _load_columns(p)
-    if "host_mem_us" not in cols:
-        return
-    fig, ax = plt.subplots(figsize=(4.5, 3.0))
+    if "host_mem_us" not in cols: return
+    fig, ax = plt.subplots(figsize=(3.4, 2.3))
     hm = cols["host_mem_us"]
     if "offload_us" in cols:
-        ax.plot(hm, cols["offload_us"], label="SmartNIC offload (n × host_mem + dispatch)")
+        ax.plot(hm, cols["offload_us"],
+                label="Memory-side offload",
+                color="#0072B2", linewidth=1.6)
     if "rdma_us" in cols:
-        ax.plot(hm, cols["rdma_us"], label="One-sided RDMA (n × RTT)")
-    ax.axvline(2.5, color="gray", linestyle="--", alpha=0.5,
-               label="Crossover = RTT (2.5 µs)")
-    ax.axvline(0.75, color="green", linestyle=":", alpha=0.7,
-               label="Tiara FPGA PCIe (0.75 µs)")
-    ax.set_xlabel("Host-memory access latency (µs)")
-    ax.set_ylabel("Total latency (µs)")
-    ax.set_title("Crossover: SmartNIC offload vs one-sided RDMA")
-    ax.legend(fontsize=8); ax.grid(True, alpha=0.3)
-    out = FIGS / "crossover.png"
-    fig.tight_layout()
-    fig.savefig(out, dpi=140)
-    print(f"wrote {out}")
-
-
-def plot_paged_baselines(plt):
-    """Updated paged-attention plot with all baselines."""
-    p = RESULTS / "paged_attention.dat"
-    if not p.exists():
-        return
-    cols = _load_columns(p)
-    if "block_bytes" not in cols:
-        return
-    bs = cols["block_bytes"]
-    fig, ax = plt.subplots(figsize=(4.5, 3.0))
-    if "Tiara_GBps" in cols:  ax.plot(bs, cols["Tiara_GBps"], marker="o", label="Tiara (RTL)")
-    if "RDMA_GBps"  in cols:  ax.plot(bs, cols["RDMA_GBps"],  marker="s", label="RDMA (batched)")
-    if "RPC_GBps"   in cols:  ax.plot(bs, cols["RPC_GBps"],   marker="^", label="RPC")
-    if "RedN_GBps"  in cols:  ax.plot(bs, cols["RedN_GBps"],  marker="d", label="RedN")
-    ax.set_xscale("log", base=2)
-    ax.set_xlabel("Block size (bytes, log)")
-    ax.set_ylabel("Throughput (GB/s)")
-    ax.set_title("PagedAttention throughput vs block size")
-    ax.legend(); ax.grid(True, alpha=0.3, which="both")
-    out = FIGS / "paged_attention.png"
-    fig.tight_layout()
-    fig.savefig(out, dpi=140)
-    print(f"wrote {out}")
+        ax.plot(hm, cols["rdma_us"],
+                label="One-sided RDMA",
+                color="#D55E00", linewidth=1.6)
+    ax.axvline(2.5, color="gray", linestyle=":", alpha=0.7)
+    ax.text(2.5, ax.get_ylim()[1] * 0.95,
+            " crossover\n (= RTT)", color="gray", fontsize=6.5,
+            ha="left", va="top")
+    ax.axvline(0.75, color="#009E73", linestyle="--", alpha=0.7)
+    ax.text(0.75, ax.get_ylim()[1] * 0.55,
+            " Tiara FPGA\n PCIe (0.75 µs)", color="#009E73",
+            fontsize=6.5, ha="left", va="top")
+    ax.set_xlabel("Host-memory access latency ($\\mu$s)")
+    ax.set_ylabel("End-to-end latency ($\\mu$s)")
+    ax.legend(loc="upper left")
+    _save(fig, "crossover")
 
 
 def main() -> int:
-    plt = _try_matplotlib()
-    if plt is None:
-        return 0
-    FIGS.mkdir(parents=True, exist_ok=True)
-    plot_graph(plt)
-    plot_graph_tput(plt)
-    plot_ptwalk(plt)
-    plot_paged_baselines(plt)
+    plt = _setup_matplotlib()
+    if plt is None: return 0
+    plot_graph_latency(plt)
+    plot_graph_throughput(plt)
+    plot_pt_walk(plt)
     plot_dist_lock(plt)
+    plot_paged(plt)
     plot_crossover(plt)
     return 0
 

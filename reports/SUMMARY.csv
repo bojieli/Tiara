@@ -1,0 +1,22 @@
+metric,value
+graph_d1_us,1.66
+graph_d10_us,8.63
+graph_d10_speedup_vs_rdma,2.896871378910776
+pt_walk_tiara_us,3.7
+pt_walk_speedup_vs_rdma,2.7027027027027026
+lock_1_us,14.77
+lock_16_us,20.39
+paged_8kb_tiara_gbps,26.16
+paged_8kb_speedup_vs_rdma,6.013793103448276
+1-MP core (post-route).LUT,27286
+1-MP core (post-route).FF,84733
+1-MP core (post-route).BRAM36,2
+1-MP core (post-route).WNS_ns,0.184
+Tiara + Corundum app (post-route).LUT,28235
+Tiara + Corundum app (post-route).FF,86400
+Tiara + Corundum app (post-route).BRAM36,2
+Tiara + Corundum app (post-route).WNS_ns,0.077
+8-MP core (post-synth).LUT,-1
+8-MP core (post-synth).FF,-1
+8-MP core (post-synth).BRAM36,-1
+8-MP core (post-synth).WNS_ns,nan
