@@ -33,28 +33,42 @@ mkdir -p "$APP_DST/tiara"
 cp -rv "$TIARA_RTL"/*.sv          "$APP_DST/tiara/"
 cp -v  "$TIARA_INC/tiara_pkg.svh" "$APP_DST/tiara/"
 cp -v  "$APP_SRC/tiara_axil_slave.sv" "$APP_DST/tiara/"
+cp -v  "$APP_SRC/tiara_packet.svh"    "$APP_DST/tiara/"
+cp -v  "$APP_SRC/tiara_rx_filter.sv"  "$APP_DST/tiara/"
+cp -v  "$APP_SRC/tiara_tx_resp.sv"    "$APP_DST/tiara/"
+cp -v  "$APP_SRC/tiara_tx_arb.sv"     "$APP_DST/tiara/"
 
-# 3) Inject Tiara into Corundum's filelist
-echo "=== [3/4] Injecting Tiara into AU50 Makefile ==="
+# 3) Inject Tiara into Corundum's filelist + app-block module list +
+#    enable APP_ENABLE in config.tcl
+echo "=== [3/4] Patching AU50 Makefile + config.tcl for Tiara ==="
 MK="$AU50_DIR/Makefile"
+TIARA_BASE="../app/template/rtl/tiara"
 if ! grep -q 'tiara_pkg.svh' "$MK"; then
-    awk '/^SYN_FILES = / {
+    awk -v TB="$TIARA_BASE" '/^SYN_FILES \+= rtl\/sync_signal.v$/ {
         print
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_pkg.svh"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_mem_if.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_alu.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_regfile.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_istore.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_loop_stack.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_mp.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_dispatcher.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_mem_simple.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_synth_top.sv"
-        print "SYN_FILES += $(APP_DIR)/template/rtl/tiara/tiara_axil_slave.sv"
+        print "SYN_FILES += ../app/template/rtl/mqnic_app_block.v"
+        print "SYN_FILES += " TB "/tiara_pkg.svh"
+        print "SYN_FILES += " TB "/tiara_packet.svh"
+        print "SYN_FILES += " TB "/tiara_mem_if.sv"
+        print "SYN_FILES += " TB "/tiara_alu.sv"
+        print "SYN_FILES += " TB "/tiara_regfile.sv"
+        print "SYN_FILES += " TB "/tiara_istore.sv"
+        print "SYN_FILES += " TB "/tiara_loop_stack.sv"
+        print "SYN_FILES += " TB "/tiara_mp.sv"
+        print "SYN_FILES += " TB "/tiara_dispatcher.sv"
+        print "SYN_FILES += " TB "/tiara_mem_simple.sv"
+        print "SYN_FILES += " TB "/tiara_synth_top.sv"
+        print "SYN_FILES += " TB "/tiara_axil_slave.sv"
+        print "SYN_FILES += " TB "/tiara_rx_filter.sv"
+        print "SYN_FILES += " TB "/tiara_tx_resp.sv"
+        print "SYN_FILES += " TB "/tiara_tx_arb.sv"
         next
     }
     { print }' "$MK" > "$MK.new" && mv "$MK.new" "$MK"
 fi
+# Enable the app block in config.tcl
+sed -i 's/dict set params APP_ENABLE "0"/dict set params APP_ENABLE "1"/' \
+    "$AU50_DIR/config.tcl"
 
 # 4) Run Corundum's bitstream build
 echo "=== [4/4] Running Corundum AU50 bitstream build ==="

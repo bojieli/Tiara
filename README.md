@@ -98,15 +98,30 @@ values reflect what a real Alveo U50 build produces.
 
 ## Production build (real FPGA)
 
-The provided RTL targets simulation by default, but is structured for
-synthesis. To build a hardware bitstream:
+The repo ships a complete, synthesizable Corundum + Tiara integration
+that drops Tiara into the standard mqnic application slot:
 
-1. Replace `tiara_pcie_dma.sv` with the Xilinx XDMA AXI master (see
-   `docs/FPGA_BUILD.md`).
-2. Replace `tiara_rdma_engine.sv` with a Corundum-stack-attached RDMA
-   transport (see `docs/CORUNDUM_INTEGRATION.md`).
-3. Run Vivado on the resulting filelist with the U50 `xpfm`. Expected
-   utilization at 200 MHz: ~64 K LUTs, ~78 BRAMs (≈8% of U50).
+* **Wire path**: remote clients send Tiara invocation packets directly
+  on Ethernet (custom Ethertype `0x88B5`) — see
+  `docs/WIRE_PROTOCOL.md`. The packet hits `tiara_rx_filter` inside
+  the NIC, dispatches to a memory processor, and a single response
+  packet leaves on the TX path. No host CPU involvement.
+* **Host-control path**: software writes operator binaries and pokes
+  the invoke register over PIO via `/dev/tiara0`. Same MP services
+  both paths.
+
+To build the full bitstream:
+
+```bash
+make synth_app          # OOC sanity check on the integrated app block
+make impl_app           # post-place+route + reports
+make test_app           # Verilator end-to-end RX→Tiara→TX (4 cases)
+make bitstream          # full Corundum + Tiara bitstream → hw/build/fpga.bit
+```
+
+`docs/FPGA_BUILD.md` covers the OOC flow; `docs/DEPLOYMENT.md` the
+full bring-up (bitstream, JTAG/flash, mqnic + tiara_drv kernel modules,
+ConnectX-5/6 peer setup).
 
 ## Citation
 

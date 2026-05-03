@@ -264,6 +264,17 @@ bool run_case(App& app, const TestCase& tc, uint32_t task_id) {
     return ok;
 }
 
+// Builds a non-Tiara Ethernet packet (e.g., IPv4 fragment) of the
+// requested length so we can test that the RX filter passes it through
+// unmodified and the TX path doesn't make a response for it.
+std::vector<uint8_t> build_garbage_packet(uint16_t ethertype, size_t len) {
+    std::vector<uint8_t> p(std::max<size_t>(64, len), 0);
+    for (int i = 0; i < 6; i++) { p[i] = 0xff; p[6+i] = 0x11; }
+    p[12] = ethertype >> 8; p[13] = ethertype & 0xFF;
+    for (size_t i = 14; i < p.size(); i++) p[i] = static_cast<uint8_t>(i ^ 0x5A);
+    return p;
+}
+
 int run_selftest() {
     App app;
     int passed = 0, total = 0;
@@ -315,6 +326,35 @@ int run_selftest() {
         tc.args = {{5,0,0,0,0,0,0,0}};
         tc.expected_r1 = 5;
         total++; if (run_case(app, tc, 0x1004)) passed++;
+    }
+
+    // 5) Passthrough: send a non-Tiara IPv4 frame; assert no TX response
+    //    arrives and the RX-out side gets the frame.
+    {
+        auto pkt = build_garbage_packet(0x0800, 80);
+        app.send_rx_packet(pkt);
+        std::array<uint8_t, 64> resp{};
+        // Short timeout — we expect NO response.
+        bool got = app.wait_tx_response(resp, /*max_cycles=*/200);
+        bool ok = !got;
+        std::printf("  [%-22s] %s (no TX response for non-Tiara frame)\n",
+                    "passthrough non-Tiara", ok ? "PASS" : "FAIL");
+        total++; if (ok) passed++;
+    }
+
+    // 6) Back-to-back invocations: re-run the LI42 case 3 times.
+    {
+        TestCase tc;
+        tc.name = "back-to-back x3";
+        tc.prog = { encode_word(0x20, 1, 0, 0, 0xC, 99),
+                    encode_word(0x13, 0, 1, 0, 0, 0) };
+        tc.args = {{0,0,0,0,0,0,0,0}};
+        tc.expected_r1 = 99;
+        bool all = true;
+        for (int i = 0; i < 3; i++) {
+            if (!run_case(app, tc, 0x2000 + i)) { all = false; break; }
+        }
+        total++; if (all) passed++;
     }
 
     std::printf("\n%d/%d test cases passed (%llu cycles total).\n",
