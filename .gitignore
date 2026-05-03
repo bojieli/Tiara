@@ -34,3 +34,10 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Vivado run-time droppings (created in CWD by report_*)
+clockInfo.txt
+cong/
+iter_*_CongestedCLBsAndNets.txt
+*.pb
+*.rpx
