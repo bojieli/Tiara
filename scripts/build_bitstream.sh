@@ -43,10 +43,11 @@ cp -v  "$APP_SRC/tiara_tx_arb.sv"     "$APP_DST/tiara/"
 echo "=== [3/4] Patching AU50 Makefile + config.tcl for Tiara ==="
 MK="$AU50_DIR/Makefile"
 TIARA_BASE="../app/template/rtl/tiara"
+TIARA_BASE="app/template/rtl/tiara"
 if ! grep -q 'tiara_pkg.svh' "$MK"; then
     awk -v TB="$TIARA_BASE" '/^SYN_FILES \+= rtl\/sync_signal.v$/ {
         print
-        print "SYN_FILES += ../app/template/rtl/mqnic_app_block.v"
+        print "SYN_FILES += app/template/rtl/mqnic_app_block.v"
         print "SYN_FILES += " TB "/tiara_pkg.svh"
         print "SYN_FILES += " TB "/tiara_packet.svh"
         print "SYN_FILES += " TB "/tiara_mem_if.sv"
