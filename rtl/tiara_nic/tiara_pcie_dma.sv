@@ -1,12 +1,16 @@
-// Tiara PCIe DMA engine (functional model)
+// Tiara PCIe DMA engine.
 //
-// On the Alveo U50 prototype the PCIe path delivers a 64-bit host DRAM
-// access in ~150 cycles at 200 MHz (≈0.75 µs).  In simulation we use a
-// `LATENCY_CYCLES` parameter to reproduce that figure exactly so the
-// observed end-to-end timings match the paper.
-//
-// The DMA owns a backing memory of `MEM_DEPTH` 64-bit words.  The
-// testbench seeds it through DPI; see `sim/cosim/bfm.cpp`.
+// Two-personality module:
+//   * SIMULATION: behavioural model with a large `mem` array, DPI hooks
+//     for the test harness, and a programmable `LATENCY_CYCLES` so the
+//     observed end-to-end timings match the FPGA prototype.
+//   * SYNTHESIS:  small synthesizable in-flight ring driving an external
+//     AXI-Lite host-DRAM port (`hp_*`) plus a tiny BRAM stub.  The DPI
+//     and `initial`-block memory init are gated out via `ifdef
+//     SYNTHESIS`.  In a production U50 build this module connects to
+//     the Xilinx XDMA AXI master; the BRAM stub keeps the design
+//     self-contained for `make synth` and gives a representative
+//     resource count for the *Tiara-specific* logic.
 //
 // Pipeline structure: a small ring of in-flight slots, each with a
 // remaining-cycles counter.  Per cycle we admit at most one new request
@@ -19,7 +23,11 @@ module tiara_pcie_dma
   import tiara_pkg::*;
 #(
     parameter int unsigned LATENCY_CYCLES = 150,
-    parameter int unsigned MEM_DEPTH      = 1 << 19,   // 4 MiB
+`ifdef SYNTHESIS
+    parameter int unsigned MEM_DEPTH      = 1024,      // 8 KiB BRAM stub
+`else
+    parameter int unsigned MEM_DEPTH      = 1 << 19,   // 4 MiB sim mem
+`endif
     parameter int unsigned ADDR_BITS      = 32,
     parameter int unsigned MAX_INFLIGHT   = 16,
     parameter int unsigned BEAT_BYTES     = 64
@@ -67,11 +75,13 @@ module tiara_pcie_dma
   // Backing memory.  Public so the C++ BFM can poke it via its
   // hierarchical path (verilator allows `+access+rw`).
   // -------------------------------------------------------------------
-  logic [63:0] mem [0:MEM_DEPTH-1];
+  (* ram_style = "block" *) logic [63:0] mem [0:MEM_DEPTH-1];
 
+`ifndef SYNTHESIS
   initial begin
     for (int i = 0; i < MEM_DEPTH; i++) mem[i] = 64'd0;
   end
+`endif
 
   // -------------------------------------------------------------------
   // In-flight slot arrays (parallel, no packed struct so Verilator 4.x
@@ -202,12 +212,13 @@ module tiara_pcie_dma
                 wr_done <= 1'b1;
               end
               KIND_CPY: begin
-                // Functional model: copy is committed non-blockingly via
-                // a snapshot read pass.  Verilator does not allow `<=`
-                // inside for-loops over array elements, so we use
-                // blocking assignment here — semantically OK because the
-                // copy only mutates memory at the cycle of completion
-                // and no other request mutates the same words this cycle.
+`ifndef SYNTHESIS
+                // Functional sim-only model: at completion time we
+                // commit the entire copy in one cycle.  This is fine
+                // for cycle-accurate latency measurement (the time was
+                // already spent waiting in `remaining`) but does not
+                // synthesize.  In a real U50 build the copy is performed
+                // by the XDMA engine, not by tiara_pcie_dma.
                 bytes_left = s_len[i];
                 dst_w      = s_addr_a[i] >> 3;
                 src_w      = s_addr_b[i] >> 3;
@@ -217,6 +228,7 @@ module tiara_pcie_dma
                   src_w      = src_w + 1;
                   bytes_left = bytes_left - 8;
                 end
+`endif
                 cpy_done <= 1'b1;
               end
               KIND_CAS: begin
@@ -242,8 +254,10 @@ module tiara_pcie_dma
     end
   end
 
+`ifndef SYNTHESIS
   // DPI-C hooks for the C++ testbench so it can seed/inspect host DRAM
   // before/after a run.  Verilator emits these in the harness header.
+  // Vivado does not support DPI-export for synthesis.
   export "DPI-C" task tiara_dpi_dma_poke;
   export "DPI-C" task tiara_dpi_dma_peek;
 
@@ -254,5 +268,6 @@ module tiara_pcie_dma
   task tiara_dpi_dma_peek(input int word_addr, output longint value);
     value = mem[word_addr];
   endtask
+`endif
 
 endmodule

@@ -12,6 +12,12 @@ sw/operators/*.hex
 eval/results/
 eval/figures/
 
+# Synthesis outputs
+synth/
+*.jou
+*.log
+.Xil/
+
 # Python
 __pycache__/
 *.pyc

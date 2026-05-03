@@ -2,7 +2,9 @@
 
 PY ?= python3
 
-.PHONY: all sim selftest test eval bench client clean help docs
+.PHONY: all sim selftest test eval bench client clean help docs synth impl
+
+VIVADO ?= vivado
 
 help:
 	@echo "Tiara top-level targets:"
@@ -13,6 +15,8 @@ help:
 	@echo "  make bench       - run a quick smoke benchmark (graph @ depth 1..3)"
 	@echo "  make client      - build the C client library"
 	@echo "  make docs        - regenerate auto-generated docs (ISA package)"
+	@echo "  make synth       - Vivado synth on Alveo U50 (out-of-context)"
+	@echo "  make impl        - Vivado place + route + timing + util reports"
 	@echo "  make clean       - remove build outputs"
 
 all: sim client
@@ -48,8 +52,22 @@ client: sw/include/tiara.h
 
 docs: rtl/include/tiara_pkg.svh
 
+synth: rtl/include/tiara_pkg.svh
+	$(VIVADO) -mode batch -source tcl/synth.tcl -log synth/vivado_synth.log -journal synth/vivado_synth.jou
+	@echo "==== Post-synth utilization (head) ===="
+	@head -80 synth/util_post_synth.rpt || true
+	@echo "==== Post-synth WNS ===="
+	@grep -E '^\s*WNS|^\s*Slack' synth/timing_post_synth.rpt | head -5 || true
+
+impl: synth
+	$(VIVADO) -mode batch -source tcl/impl.tcl -log synth/vivado_impl.log -journal synth/vivado_impl.jou
+	@echo "==== Post-route utilization (head) ===="
+	@head -80 synth/util_post_route.rpt || true
+	@echo "==== Post-route timing summary ===="
+	@grep -E '^\s*WNS|^\s*Slack|^\s*WHS|^\s*TNS' synth/timing_post_route.rpt | head -10 || true
+
 clean:
 	$(MAKE) -C sim/verilator clean
 	$(MAKE) -C sw/client clean
-	rm -rf eval/results eval/figures
+	rm -rf eval/results eval/figures synth
 	find sw/operators -name '*.bin' -delete

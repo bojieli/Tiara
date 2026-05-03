@@ -28,7 +28,7 @@ module tiara_istore
     output logic                                rd_valid
 );
 
-  logic [63:0] mem [0:DEPTH-1];
+  (* ram_style = "block" *) logic [63:0] mem [0:DEPTH-1];
 
   always_ff @(posedge clk) begin
     if (wr_en) mem[wr_addr] <= wr_data;
@@ -40,9 +40,13 @@ module tiara_istore
     end
   end
 
-  // Initialize to NOP so an empty slot does not execute random opcodes.
+`ifndef SYNTHESIS
+  // Initialize to NOP so an empty simulation slot does not execute
+  // random opcodes.  Synthesizers infer BRAM init from the host-side
+  // load_en path (write at registration), so this is sim-only.
   initial begin
     for (int i = 0; i < DEPTH; i++) mem[i] = 64'd0;
   end
+`endif
 
 endmodule

@@ -15,8 +15,13 @@ module tiara_rdma_engine
   import tiara_pkg::*;
 #(
     parameter int unsigned RTT_CYCLES   = 500,
+`ifdef SYNTHESIS
+    parameter int unsigned MEM_DEPTH    = 256,        // 2 KiB / peer for synth
+    parameter int unsigned NUM_PEERS    = 2,
+`else
     parameter int unsigned MEM_DEPTH    = 1 << 17,
     parameter int unsigned NUM_PEERS    = 4,
+`endif
     parameter int unsigned MAX_INFLIGHT = 32,
     parameter int unsigned BEAT_BYTES   = 64
 )
@@ -64,13 +69,15 @@ module tiara_rdma_engine
   // -------------------------------------------------------------------
   // Per-peer backing memory (NUM_PEERS x MEM_DEPTH 64-bit words)
   // -------------------------------------------------------------------
-  logic [63:0] peer_mem [0:NUM_PEERS-1][0:MEM_DEPTH-1];
+  (* ram_style = "block" *) logic [63:0] peer_mem [0:NUM_PEERS-1][0:MEM_DEPTH-1];
 
+`ifndef SYNTHESIS
   initial begin
     for (int p = 0; p < NUM_PEERS; p++)
       for (int i = 0; i < MEM_DEPTH; i++)
         peer_mem[p][i] = 64'd0;
   end
+`endif
 
   // -------------------------------------------------------------------
   // In-flight tracking — same pattern as the PCIe DMA
@@ -197,6 +204,7 @@ module tiara_rdma_engine
                 wr_done <= 1'b1;
               end
               KIND_CPY: begin
+`ifndef SYNTHESIS
                 bytes_left = s_len[i];
                 dst_w      = s_addr_a[i] >> 3;
                 src_w      = s_addr_b[i] >> 3;
@@ -206,6 +214,7 @@ module tiara_rdma_engine
                   src_w      = src_w + 1;
                   bytes_left = bytes_left - 8;
                 end
+`endif
                 cpy_done <= 1'b1;
                 cpy_err  <= 1'b0;
               end
@@ -232,7 +241,8 @@ module tiara_rdma_engine
     end
   end
 
-  // BFM hooks for the testbench
+`ifndef SYNTHESIS
+  // BFM hooks for the testbench (sim only).
   export "DPI-C" task tiara_dpi_rdma_poke;
   export "DPI-C" task tiara_dpi_rdma_peek;
 
@@ -246,5 +256,6 @@ module tiara_rdma_engine
     if (dev >= 0 && dev < NUM_PEERS) value = peer_mem[dev][word_addr];
     else                              value = 64'd0;
   endtask
+`endif
 
 endmodule
