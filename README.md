@@ -88,7 +88,23 @@ scripts/gen_isa_pkg.py        keeps RTL & Python ISA constants in sync
 | Graph traversal d=1..10     | `make eval` (graph)                |
 | 3-level page-table walk     | `make eval` (ptwalk)               |
 | Disagg. PagedAttention      | `make eval` (paged)                |
-| Distributed lock            | (analytical baseline; harness)     |
+| Distributed lock            | `make eval` (dist_lock)            |
+| Crossover (Fig 3)           | `make eval` (crossover)            |
+
+After `make eval`, the headline numbers go to `reports/SUMMARY.md`:
+
+| Result | Tiara | Baseline | Speedup |
+|---|---|---|---|
+| Graph traversal d=10        | 8.6 µs        | 25.0 µs (RDMA) | **2.9×** |
+| Page-table walk             | 3.7 µs        | 10.0 µs (RDMA) | **2.7×** |
+| PagedAttention 8 KB blocks  | 12.1 GB/s     | 4.4 GB/s (RDMA, batched) | **2.8×** |
+| Distributed lock 16 clients | 20.4 µs       | 31.3 µs (RDMA) | **1.5×** |
+
+| Vivado on U50 (xcu50-fsvh2104-2-e, 200 MHz) | LUT | FF | BRAM | DSP | WNS |
+|---|---:|---:|---:|---:|---:|
+| 1-MP core (post-route)               | 27,286  | 84,733  | 2  | 10 | +0.184 ns |
+| Tiara + Corundum app (post-route)    | 28,235  | 86,400  | 2  | 10 | +0.077 ns |
+| 8-MP core (post-synth, paper §4.1)   | 224,465 | 676,765 | 16 | 80 | +1.187 ns |
 
 Every figure in the paper is produced from a `*.dat` file in
 `eval/results/`. The simulator is **timing-faithful**: clock period
