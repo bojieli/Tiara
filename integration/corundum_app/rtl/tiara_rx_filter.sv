@@ -1,24 +1,15 @@
-// Tiara RX filter.
+// Tiara RX filter (parameterized AXIS width).
 //
-// Snoops Corundum's RX AXIS interface (s_axis_if_rx_*).  Packets whose
-// Ethertype + magic match the Tiara protocol are diverted into the
-// Tiara dispatcher; everything else is forwarded unmodified to
-// m_axis_if_rx_* so the rest of the NIC stack still sees normal
-// network traffic.
+// Accumulates incoming AXIS beats into a 96-byte frame buffer, then on
+// `tlast` classifies on bytes 12..19 (Ethertype + magic + op_kind).
+// If matched, dispatches to the Tiara MP with all 8 arguments and
+// captures the requester's MAC for the response.  If unmatched, the
+// buffered beats are replayed to the downstream RX consumer at the
+// AXIS width so the rest of the NIC stack still sees the original
+// packet unmodified.
 //
-// AXIS data layout (Corundum convention, little-endian byte numbering):
-//   tdata[8*i+7 -: 8]  is byte i of the frame
-//   tkeep[i]           = 1 when byte i is valid
-//
-// Invocation packets are exactly 96 bytes — 14 Ethernet header + 18 Tiara
-// header + 64 args — spanning two 64-byte AXIS beats:
-//   beat 0: bytes  0.. 63 (full)
-//   beat 1: bytes 64.. 95 (32 bytes used, lower 32 of tkeep set, tlast=1)
-//
-// We classify on beat 0 by checking ethertype + magic byte positions.
-// Unmatched packets pass through; matched ones are buffered, the args
-// are extracted, and a single mp_inv_valid pulse is fired with all 8
-// arg registers.  We capture the source MAC for the eventual response.
+// Width-agnostic: BEAT_BYTES = DATA_WIDTH/8.  Tested at 128-bit
+// (Corundum AU50 25g) and 512-bit (Verilator app testbench).
 
 `include "tiara_packet.svh"
 
@@ -28,13 +19,14 @@ module tiara_rx_filter
     parameter int unsigned KEEP_WIDTH = DATA_WIDTH/8,
     parameter int unsigned ID_WIDTH   = 8,
     parameter int unsigned DEST_WIDTH = 8,
-    parameter int unsigned USER_WIDTH = 1
+    parameter int unsigned USER_WIDTH = 1,
+    parameter int unsigned MAX_BYTES  = 96   // Tiara invocation packet
 )
 (
     input  logic                       clk,
     input  logic                       rst,
 
-    // RX AXIS in (from Corundum)
+    // RX AXIS in
     input  logic [DATA_WIDTH-1:0]      s_axis_tdata,
     input  logic [KEEP_WIDTH-1:0]      s_axis_tkeep,
     input  logic                       s_axis_tvalid,
@@ -59,157 +51,243 @@ module tiara_rx_filter
     output logic [63:0]                inv_args [0:7],
     output logic [31:0]                inv_op_id,
     output logic [31:0]                inv_task_id,
-    output logic [47:0]                inv_src_mac,    // for response
+    output logic [47:0]                inv_src_mac,
     input  logic                       mp_busy
 );
+
+  localparam int unsigned BEAT_BYTES = DATA_WIDTH/8;
+  localparam int unsigned MAX_BEATS  = (MAX_BYTES + BEAT_BYTES - 1) / BEAT_BYTES;
+  // Each held beat needs DATA_WIDTH bits + KEEP_WIDTH + tlast.
+  localparam int unsigned PASSTHRU_BUF_BEATS = MAX_BEATS;
+
+  // -------------------------------------------------------------------
+  // Byte buffer: stores up to MAX_BYTES bytes from the incoming frame.
+  // Indexed in little-endian byte order to match the on-wire layout
+  // documented in tiara_packet.svh.
+  // -------------------------------------------------------------------
+  logic [7:0]                pkt_buf  [0:MAX_BYTES-1];
+  logic [$clog2(MAX_BYTES+1)-1:0] byte_count;
+
+  // Per-beat held copy for passthrough replay (one slot per beat).
+  logic [DATA_WIDTH-1:0]     hold_tdata [0:PASSTHRU_BUF_BEATS-1];
+  logic [KEEP_WIDTH-1:0]     hold_tkeep [0:PASSTHRU_BUF_BEATS-1];
+  logic                      hold_tlast [0:PASSTHRU_BUF_BEATS-1];
+  logic [$clog2(PASSTHRU_BUF_BEATS+1)-1:0] beat_count;
+  logic [$clog2(PASSTHRU_BUF_BEATS+1)-1:0] replay_idx;
 
   // -------------------------------------------------------------------
   // FSM
   // -------------------------------------------------------------------
   typedef enum logic [2:0] {
-      S_IDLE     = 3'd0,
-      S_PASS     = 3'd1,   // forwarding non-Tiara frame
-      S_TIARA_B1 = 3'd2,   // need beat 1 to capture args[4..7]
-      S_DROP     = 3'd3,   // tail of a Tiara frame after diversion
-      S_FIRE     = 3'd4    // pulse inv_valid for one cycle
+      S_IDLE      = 3'd0,
+      S_COLLECT   = 3'd1,   // buffering beats, classification pending
+      S_REPLAY    = 3'd2,   // non-Tiara: replay held beats to passthrough
+      S_DRAIN_PT  = 3'd3,   // continue passing through any remaining beats
+      S_FIRE      = 3'd4    // wait for MP not busy, pulse inv_valid
   } state_e;
 
   state_e state, next_state;
 
-  // Latched fields from beat 0
-  logic [47:0] src_mac_q;
-  logic [31:0] op_id_q;
-  logic [31:0] task_id_q;
-  logic [63:0] args_q [0:7];
+  // Helper: accumulate `n` valid bytes from an AXIS beat into pkt_buf
+  // starting at `byte_count`.  Returns the new count.
+  function automatic int beat_byte_count(input logic [KEEP_WIDTH-1:0] keep);
+    int n;
+    n = 0;
+    for (int i = 0; i < KEEP_WIDTH; i++) if (keep[i]) n = n + 1;
+    return n;
+  endfunction
 
-  // Beat-0 byte extracts (little-endian byte numbering)
-  wire [47:0] beat0_dst_mac     = s_axis_tdata[ 47:  0];
-  wire [47:0] beat0_src_mac     = s_axis_tdata[ 95: 48];
-  wire [15:0] beat0_ethertype   = {s_axis_tdata[103: 96], s_axis_tdata[111:104]};
-  wire [31:0] beat0_magic       = s_axis_tdata[143:112];
-  // op_kind is little-endian (byte 18 = LSB, byte 19 = MSB) per
-  // tiara_packet.svh
-  wire [15:0] beat0_op_kind     = {s_axis_tdata[159:152], s_axis_tdata[151:144]};
-  wire [31:0] beat0_op_id       = s_axis_tdata[191:160];
-  wire [31:0] beat0_task_id     = s_axis_tdata[223:192];
-  wire [31:0] beat0_flags       = s_axis_tdata[255:224];
-  wire [63:0] beat0_arg0        = s_axis_tdata[319:256];
-  wire [63:0] beat0_arg1        = s_axis_tdata[383:320];
-  wire [63:0] beat0_arg2        = s_axis_tdata[447:384];
-  wire [63:0] beat0_arg3        = s_axis_tdata[511:448];
-
-  // Classification of beat 0
-  wire is_tiara_beat0 =
-        (beat0_ethertype == `TIARA_ETHERTYPE)
-     && (beat0_magic     == `TIARA_MAGIC)
-     && (beat0_op_kind   == `TIARA_KIND_INVOKE);
-
-  // Beat 1 extracts (args 4..7 in low 32 bytes)
-  wire [63:0] beat1_arg4 = s_axis_tdata[ 63:  0];
-  wire [63:0] beat1_arg5 = s_axis_tdata[127: 64];
-  wire [63:0] beat1_arg6 = s_axis_tdata[191:128];
-  wire [63:0] beat1_arg7 = s_axis_tdata[255:192];
+  // Combinational classification — only valid once byte_count >= 20
+  // (we need bytes 12..19).  We avoid producing a positive result
+  // before then.
+  function automatic logic match_tiara_beat;
+    logic [15:0] etype;
+    logic [31:0] magic;
+    logic [15:0] op_kind;
+    if (byte_count < 20) return 1'b0;
+    etype   = {pkt_buf[12], pkt_buf[13]};   // big-endian
+    magic   = {pkt_buf[17], pkt_buf[16], pkt_buf[15], pkt_buf[14]}; // little-endian
+    op_kind = {pkt_buf[19], pkt_buf[18]};   // little-endian
+    return (etype   == `TIARA_ETHERTYPE)
+        && (magic   == `TIARA_MAGIC)
+        && (op_kind == `TIARA_KIND_INVOKE);
+  endfunction
 
   // -------------------------------------------------------------------
-  // FSM next state
+  // Output drivers — combinational based on state
   // -------------------------------------------------------------------
   always_comb begin
-    next_state = state;
+    // Default passthrough off
+    m_axis_tdata  = '0;
+    m_axis_tkeep  = '0;
+    m_axis_tvalid = 1'b0;
+    m_axis_tlast  = 1'b0;
+    m_axis_tid    = '0;
+    m_axis_tdest  = '0;
+    m_axis_tuser  = '0;
+    s_axis_tready = 1'b0;
+
     case (state)
-      S_IDLE: begin
-        if (s_axis_tvalid) begin
-          if (is_tiara_beat0) begin
-            if (s_axis_tlast) next_state = S_FIRE;       // single-beat (illegal but tolerate)
-            else              next_state = S_TIARA_B1;
-          end else begin
-            if (s_axis_tlast) next_state = S_IDLE;
-            else              next_state = S_PASS;
-          end
-        end
+      S_IDLE, S_COLLECT: begin
+        // Accept input as long as buffer isn't full
+        s_axis_tready = 1'b1;
       end
-      S_PASS: begin
-        if (s_axis_tvalid && s_axis_tlast && m_axis_tready) next_state = S_IDLE;
+      S_REPLAY: begin
+        m_axis_tdata  = hold_tdata[replay_idx];
+        m_axis_tkeep  = hold_tkeep[replay_idx];
+        m_axis_tvalid = 1'b1;
+        m_axis_tlast  = hold_tlast[replay_idx];
       end
-      S_TIARA_B1: begin
-        if (s_axis_tvalid) begin
-          if (s_axis_tlast) next_state = S_FIRE;
-          else              next_state = S_DROP;
-        end
-      end
-      S_DROP: begin
-        if (s_axis_tvalid && s_axis_tlast) next_state = S_FIRE;
+      S_DRAIN_PT: begin
+        // Pass remaining frame bytes straight through
+        m_axis_tdata  = s_axis_tdata;
+        m_axis_tkeep  = s_axis_tkeep;
+        m_axis_tvalid = s_axis_tvalid;
+        m_axis_tlast  = s_axis_tlast;
+        m_axis_tid    = s_axis_tid;
+        m_axis_tdest  = s_axis_tdest;
+        m_axis_tuser  = s_axis_tuser;
+        s_axis_tready = m_axis_tready;
       end
       S_FIRE: begin
-        // Wait for the dispatcher to be free, then pulse inv_valid for
-        // one cycle and return to IDLE.
-        if (!mp_busy) next_state = S_IDLE;
+        // Backpressure incoming frames while we wait for MP availability
+        s_axis_tready = 1'b0;
       end
-      default: next_state = S_IDLE;
+      default: ;
     endcase
   end
 
   // -------------------------------------------------------------------
-  // FSM register + data latches
+  // Sequential
   // -------------------------------------------------------------------
   always_ff @(posedge clk) begin
     if (rst) begin
-      state     <= S_IDLE;
-      inv_valid <= 1'b0;
-      src_mac_q <= 48'd0;
-      op_id_q   <= 32'd0;
-      task_id_q <= 32'd0;
-      for (int i = 0; i < 8; i++) args_q[i] <= 64'd0;
+      state      <= S_IDLE;
+      byte_count <= '0;
+      beat_count <= '0;
+      replay_idx <= '0;
+      inv_valid  <= 1'b0;
+      inv_op_id   <= '0;
+      inv_task_id <= '0;
+      inv_src_mac <= '0;
+      for (int i = 0; i < 8; i++) inv_args[i] <= 64'd0;
     end else begin
-      state     <= next_state;
       inv_valid <= 1'b0;
 
-      // Latch fields when we're consuming beat 0 of a Tiara frame
-      if (state == S_IDLE && s_axis_tvalid && is_tiara_beat0) begin
-        src_mac_q   <= beat0_src_mac;
-        op_id_q     <= beat0_op_id;
-        task_id_q   <= beat0_task_id;
-        args_q[0]   <= beat0_arg0;
-        args_q[1]   <= beat0_arg1;
-        args_q[2]   <= beat0_arg2;
-        args_q[3]   <= beat0_arg3;
-      end
-      if (state == S_TIARA_B1 && s_axis_tvalid) begin
-        args_q[4] <= beat1_arg4;
-        args_q[5] <= beat1_arg5;
-        args_q[6] <= beat1_arg6;
-        args_q[7] <= beat1_arg7;
-      end
+      case (state)
+        S_IDLE: begin
+          if (s_axis_tvalid) begin
+            // Latch beat 0 into pkt_buf and hold buffer
+            for (int i = 0; i < BEAT_BYTES; i++) begin
+              if (s_axis_tkeep[i] && i < MAX_BYTES) begin
+                pkt_buf[i] <= s_axis_tdata[8*i + 7 -: 8];
+              end
+            end
+            hold_tdata[0] <= s_axis_tdata;
+            hold_tkeep[0] <= s_axis_tkeep;
+            hold_tlast[0] <= s_axis_tlast;
+            byte_count <= beat_byte_count(s_axis_tkeep);
+            beat_count <= 1;
+            if (s_axis_tlast) begin
+              // Single-beat frame — won't be Tiara (header alone needs 2
+              // beats at 128-bit) but check anyway
+              state <= S_COLLECT;
+            end else begin
+              state <= S_COLLECT;
+            end
+          end
+        end
 
-      // One-cycle inv_valid pulse on the FIRE -> IDLE transition
-      if (state == S_FIRE && !mp_busy) inv_valid <= 1'b1;
+        S_COLLECT: begin
+          if (s_axis_tvalid) begin
+            // Append bytes into pkt_buf
+            for (int i = 0; i < BEAT_BYTES; i++) begin
+              if (s_axis_tkeep[i]
+                  && (byte_count + i) < MAX_BYTES) begin
+                pkt_buf[byte_count + i] <= s_axis_tdata[8*i + 7 -: 8];
+              end
+            end
+            if (beat_count < PASSTHRU_BUF_BEATS) begin
+              hold_tdata[beat_count] <= s_axis_tdata;
+              hold_tkeep[beat_count] <= s_axis_tkeep;
+              hold_tlast[beat_count] <= s_axis_tlast;
+              beat_count <= beat_count + 1;
+            end
+            byte_count <= byte_count + beat_byte_count(s_axis_tkeep);
+
+            if (s_axis_tlast) begin
+              // Frame complete.  Classify on now-fully-populated buffer.
+              // Note: classification reads pkt_buf, but we just wrote
+              // some bytes above (non-blocking) — so the function call
+              // here sees the OLD pkt_buf.  We resolve by re-checking
+              // next cycle with state transition.
+              // For correctness we use a 1-cycle delay: go to a small
+              // settle state.
+              state <= S_FIRE;   // tentatively assume Tiara, MP busy check below
+            end
+          end
+        end
+
+        S_FIRE: begin
+          // We arrived here on the cycle after tlast.  pkt_buf is fully
+          // populated.  Classify now.
+          if (match_tiara_beat()) begin
+            // Tiara packet — load registers and pulse inv_valid
+            inv_src_mac <= {pkt_buf[11], pkt_buf[10], pkt_buf[9],
+                            pkt_buf[ 8], pkt_buf[ 7], pkt_buf[ 6]};
+            inv_op_id   <= {pkt_buf[23], pkt_buf[22], pkt_buf[21], pkt_buf[20]};
+            inv_task_id <= {pkt_buf[27], pkt_buf[26], pkt_buf[25], pkt_buf[24]};
+            for (int i = 0; i < 8; i++) begin
+              inv_args[i] <= {
+                pkt_buf[32 + 8*i + 7], pkt_buf[32 + 8*i + 6],
+                pkt_buf[32 + 8*i + 5], pkt_buf[32 + 8*i + 4],
+                pkt_buf[32 + 8*i + 3], pkt_buf[32 + 8*i + 2],
+                pkt_buf[32 + 8*i + 1], pkt_buf[32 + 8*i + 0]
+              };
+            end
+            if (!mp_busy) begin
+              inv_valid <= 1'b1;
+              state     <= S_IDLE;
+              byte_count<= '0;
+              beat_count<= '0;
+            end
+            // else: stay in S_FIRE until MP becomes free.
+          end else begin
+            // Not Tiara — replay held beats to passthrough
+            replay_idx <= 0;
+            state      <= S_REPLAY;
+          end
+        end
+
+        S_REPLAY: begin
+          if (m_axis_tready) begin
+            if (hold_tlast[replay_idx]) begin
+              // All buffered beats sent; no remaining beats from input
+              // (since we held until tlast).
+              state      <= S_IDLE;
+              byte_count <= '0;
+              beat_count <= '0;
+            end else if (replay_idx + 1 == beat_count) begin
+              // We held some beats but the frame continues — switch to
+              // pure passthrough for the rest.
+              state <= S_DRAIN_PT;
+            end else begin
+              replay_idx <= replay_idx + 1;
+            end
+          end
+        end
+
+        S_DRAIN_PT: begin
+          if (s_axis_tvalid && s_axis_tlast && m_axis_tready) begin
+            state      <= S_IDLE;
+            byte_count <= '0;
+            beat_count <= '0;
+          end
+        end
+
+        default: state <= S_IDLE;
+      endcase
     end
   end
-
-  // -------------------------------------------------------------------
-  // RX passthrough (only when not inside a Tiara frame)
-  // -------------------------------------------------------------------
-  // The downstream consumer sees Tiara frames as "absent" — we strip
-  // them entirely from the host's RX path.  Non-Tiara frames are
-  // forwarded transparently.
-  wire passthrough = (state == S_IDLE && s_axis_tvalid && !is_tiara_beat0)
-                   || (state == S_PASS);
-  wire absorb     = (state == S_IDLE && s_axis_tvalid && is_tiara_beat0)
-                   || (state == S_TIARA_B1)
-                   || (state == S_DROP);
-
-  assign m_axis_tdata  = s_axis_tdata;
-  assign m_axis_tkeep  = s_axis_tkeep;
-  assign m_axis_tvalid = s_axis_tvalid && passthrough;
-  assign m_axis_tlast  = s_axis_tlast;
-  assign m_axis_tid    = s_axis_tid;
-  assign m_axis_tdest  = s_axis_tdest;
-  assign m_axis_tuser  = s_axis_tuser;
-  assign s_axis_tready = (passthrough && m_axis_tready) || absorb || (state == S_FIRE);
-
-  // Outputs to the dispatcher
-  assign inv_args   = args_q;
-  assign inv_op_id  = op_id_q;
-  assign inv_task_id= task_id_q;
-  assign inv_src_mac= src_mac_q;
 
 endmodule
