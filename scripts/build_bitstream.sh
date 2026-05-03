@@ -70,8 +70,11 @@ if ! grep -q 'tiara_pkg.svh' "$MK"; then
     }
     { print }' "$MK" > "$MK.new" && mv "$MK.new" "$MK"
 fi
-# Enable the app block in config.tcl
+# Enable the app block in config.tcl AND set APP_ID to the value the
+# template's elaboration check expects (else mqnic_core's $error fires).
 sed -i 's/dict set params APP_ENABLE "0"/dict set params APP_ENABLE "1"/' \
+    "$AU50_DIR/config.tcl"
+sed -i 's/dict set params APP_ID "32.h00000000"/dict set params APP_ID "32'\''h12340001"/' \
     "$AU50_DIR/config.tcl"
 
 # 4) Run Corundum's bitstream build
