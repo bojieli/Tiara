@@ -55,3 +55,4 @@ eval/figures/
 sim/verilator_app/build/
 synth_8mp/
 *.dcp
+reports/u50_2025.2_full_bitstream/fpga_timing_summary_routed.rpt

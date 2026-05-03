@@ -1,0 +1,461 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
+| Date         : Sun May  3 16:55:30 2026
+| Host         : ubuntu running 64-bit Ubuntu 22.04.5 LTS
+| Command      : report_drc -file fpga_drc_routed.rpt -pb fpga_drc_routed.pb -rpx fpga_drc_routed.rpx
+| Design       : fpga
+| Device       : xcu50-fsvh2104-2-e
+| Speed File   : -2
+| Design State : Fully Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Report DRC
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: netlist
+          Floorplan: design_1
+      Design limits: <entire design considered>
+           Ruledeck: default
+             Max checks: <unlimited>
+             Checks found: 84
++-----------+----------+--------------------------------------------+--------+
+| Rule      | Severity | Description                                | Checks |
++-----------+----------+--------------------------------------------+--------+
+| DPIP-2    | Warning  | Input pipelining                           | 20     |
+| DPOP-3    | Warning  | PREG Output pipelining                     | 3      |
+| DPOP-4    | Warning  | MREG Output pipelining                     | 6      |
+| DPOR-2    | Warning  | Asynchronous load check                    | 51     |
+| REQP-1774 | Warning  | RAMB36E2_WRITE_WIDTH_A_18_doesnt_use_WEA32 | 2      |
+| REQP-1776 | Warning  | RAMB36E2_WRITE_WIDTH_B_18_doesnt_use_WEB72 | 2      |
++-----------+----------+--------------------------------------------+--------+
+
+2. REPORT DETAILS
+-----------------
+DPIP-2#1 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#2 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#3 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__0 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__0/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#4 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__0 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__0/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#5 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__1 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__1/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#6 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__1 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__1/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#7 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#8 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#9 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__3 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__3/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#10 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__3 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__3/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#11 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__4 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__4/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#12 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__4 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__4/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#13 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#14 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#15 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__6 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__6/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#16 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__6 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__6/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#17 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#18 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#19 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__8 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__8/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#20 Warning
+Input pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__8 input core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__8/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPOP-3#1 Warning
+PREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2/P[47:0] is not pipelined (PREG=0). Pipelining the DSP48 output will improve performance and often saves power so it is suggested whenever possible to fully pipeline this function.  If this DSP48 function was inferred, it is suggested to describe an additional register stage after this function.  If the DSP48 was instantiated in the design, it is suggested to set the PREG attribute to 1.
+Related violations: <none>
+
+DPOP-3#2 Warning
+PREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5/P[47:0] is not pipelined (PREG=0). Pipelining the DSP48 output will improve performance and often saves power so it is suggested whenever possible to fully pipeline this function.  If this DSP48 function was inferred, it is suggested to describe an additional register stage after this function.  If the DSP48 was instantiated in the design, it is suggested to set the PREG attribute to 1.
+Related violations: <none>
+
+DPOP-3#3 Warning
+PREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7/P[47:0] is not pipelined (PREG=0). Pipelining the DSP48 output will improve performance and often saves power so it is suggested whenever possible to fully pipeline this function.  If this DSP48 function was inferred, it is suggested to describe an additional register stage after this function.  If the DSP48 was instantiated in the design, it is suggested to set the PREG attribute to 1.
+Related violations: <none>
+
+DPOP-4#1 Warning
+MREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__0 multiplier stage core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__0/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+Related violations: <none>
+
+DPOP-4#2 Warning
+MREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 multiplier stage core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+Related violations: <none>
+
+DPOP-4#3 Warning
+MREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__4 multiplier stage core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__4/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+Related violations: <none>
+
+DPOP-4#4 Warning
+MREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 multiplier stage core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+Related violations: <none>
+
+DPOP-4#5 Warning
+MREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 multiplier stage core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+Related violations: <none>
+
+DPOP-4#6 Warning
+MREG Output pipelining  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__8 multiplier stage core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__8/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+Related violations: <none>
+
+DPOR-2#1 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[0]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#2 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[10]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#3 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[11]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#4 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[12]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#5 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[13]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#6 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[14]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#7 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[15]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#8 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[16]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#9 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[1]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#10 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[2]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#11 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[3]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#12 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[4]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#13 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[5]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#14 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[6]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#15 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[7]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#16 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[8]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#17 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__2 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[9]__4). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#18 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[0]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#19 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[10]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#20 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[11]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#21 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[12]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#22 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[13]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#23 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[14]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#24 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[15]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#25 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[16]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#26 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[1]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#27 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[2]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#28 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[3]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#29 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[4]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#30 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[5]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#31 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[6]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#32 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[7]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#33 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[8]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#34 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__5 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[9]__6). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#35 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[0]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#36 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[10]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#37 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[11]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#38 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[12]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#39 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[13]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#40 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[14]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#41 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[15]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#42 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[16]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#43 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[1]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#44 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[2]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#45 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[3]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#46 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[4]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#47 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[5]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#48 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[6]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#49 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[7]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#50 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[8]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPOR-2#51 Warning
+Asynchronous load check  
+DSP core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe0__7 output is connected to registers with an asynchronous reset (core_inst/core_inst/core_pcie_inst/core_inst/app.app_block_inst/u_tiara_core/u_mp/u_alu/mul_pipe_reg[9]__7). This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+REQP-1774#1 Warning
+RAMB36E2_WRITE_WIDTH_A_18_doesnt_use_WEA32  
+The RAMB36E2 cell cms.cms_inst/cms_i/cms_subsystem_0/inst/reg_map_bram/U0/inst_blk_mem_gen/gnbram.gnative_mem_map_bmg.native_mem_map_blk_mem_gen/valid.cstr/ramloop[0].ram.r/prim_noinit.ram/DEVICE_8SERIES.WITH_BMM_INFO.TRUE_DP.SIMPLE_PRIM36.SERIES8_TDP_SP36_NO_ECC_ATTR.ram has WRITE_WIDTH_A set to 18. The WEA[3:2] pins should not be connected to active signal.
+Related violations: <none>
+
+REQP-1774#2 Warning
+RAMB36E2_WRITE_WIDTH_A_18_doesnt_use_WEA32  
+The RAMB36E2 cell cms.cms_inst/cms_i/cms_subsystem_0/inst/reg_map_bram/U0/inst_blk_mem_gen/gnbram.gnative_mem_map_bmg.native_mem_map_blk_mem_gen/valid.cstr/ramloop[1].ram.r/prim_noinit.ram/DEVICE_8SERIES.WITH_BMM_INFO.TRUE_DP.SIMPLE_PRIM36.SERIES8_TDP_SP36_NO_ECC_ATTR.ram has WRITE_WIDTH_A set to 18. The WEA[3:2] pins should not be connected to active signal.
+Related violations: <none>
+
+REQP-1776#1 Warning
+RAMB36E2_WRITE_WIDTH_B_18_doesnt_use_WEB72  
+The RAMB36E2 cell cms.cms_inst/cms_i/cms_subsystem_0/inst/reg_map_bram/U0/inst_blk_mem_gen/gnbram.gnative_mem_map_bmg.native_mem_map_blk_mem_gen/valid.cstr/ramloop[0].ram.r/prim_noinit.ram/DEVICE_8SERIES.WITH_BMM_INFO.TRUE_DP.SIMPLE_PRIM36.SERIES8_TDP_SP36_NO_ECC_ATTR.ram has WRITE_WIDTH_B set to 18. The WEBWE[7:2] pins should not be connected to active signal.
+Related violations: <none>
+
+REQP-1776#2 Warning
+RAMB36E2_WRITE_WIDTH_B_18_doesnt_use_WEB72  
+The RAMB36E2 cell cms.cms_inst/cms_i/cms_subsystem_0/inst/reg_map_bram/U0/inst_blk_mem_gen/gnbram.gnative_mem_map_bmg.native_mem_map_blk_mem_gen/valid.cstr/ramloop[1].ram.r/prim_noinit.ram/DEVICE_8SERIES.WITH_BMM_INFO.TRUE_DP.SIMPLE_PRIM36.SERIES8_TDP_SP36_NO_ECC_ATTR.ram has WRITE_WIDTH_B set to 18. The WEBWE[7:2] pins should not be connected to active signal.
+Related violations: <none>
+
+
