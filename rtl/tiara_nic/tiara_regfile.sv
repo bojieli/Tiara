@@ -19,6 +19,9 @@ module tiara_regfile
     // Read port B
     input  logic [3:0]            rb_idx,
     output logic [63:0]           rb_data,
+    // Read port C — used by two-word ops (CAS new-value, MEMCPY len/stride)
+    input  logic [3:0]            rc_idx,
+    output logic [63:0]           rc_data,
 
     // Write port
     input  logic                  we,
@@ -66,6 +69,8 @@ module tiara_regfile
     else                ra_data = regs[ra_idx];
     if (rb_idx == 4'd0) rb_data = 64'd0;
     else                rb_data = regs[rb_idx];
+    if (rc_idx == 4'd0) rc_data = 64'd0;
+    else                rc_data = regs[rc_idx];
   end
 
 endmodule

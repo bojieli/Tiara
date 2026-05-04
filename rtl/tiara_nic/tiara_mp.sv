@@ -129,8 +129,8 @@ module tiara_mp
   // -------------------------------------------------------------------
   // Register file
   // -------------------------------------------------------------------
-  logic [3:0]   rf_ra_idx, rf_rb_idx;
-  logic [63:0]  rf_ra, rf_rb;
+  logic [3:0]   rf_ra_idx, rf_rb_idx, rf_rc_idx;
+  logic [63:0]  rf_ra, rf_rb, rf_rc;
   logic         rf_we;
   logic [3:0]   rf_w_idx;
   logic [63:0]  rf_w_data;
@@ -145,6 +145,8 @@ module tiara_mp
       .ra_data    (rf_ra),
       .rb_idx     (rf_rb_idx),
       .rb_data    (rf_rb),
+      .rc_idx     (rf_rc_idx),
+      .rc_data    (rf_rc),
       .we         (rf_we),
       .w_idx      (rf_w_idx),
       .w_data     (rf_w_data),
@@ -352,6 +354,9 @@ module tiara_mp
 
     rf_ra_idx = rs1;
     rf_rb_idx = rs2;
+    // Two-word ops put their extra register index in iw1's rd field
+    // (CAS new value, MEMCPY length register).
+    rf_rc_idx = rd2;
     rf_we     = 1'b0;
     rf_w_idx  = rd;
     rf_w_data = '0;
@@ -462,8 +467,9 @@ module tiara_mp
             mem.caa_mode      = 1'b0;
             mem.atom_addr     = rf_ra;
             mem.atom_expected = rf_rb;
-            // rs2 of follow-on word holds the new value register index
-            mem.atom_swap     = '0;  // overridden by the second-word read
+            // The new value is in the register named by iw1's rd field
+            // (rd2 -> rf_rc).
+            mem.atom_swap     = rf_rc;
             if (mem.ready) next_state = S_MEM_WAIT;
           end
 

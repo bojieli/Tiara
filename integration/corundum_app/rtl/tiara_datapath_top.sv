@@ -30,6 +30,12 @@ module tiara_datapath_top
     input  logic [$clog2(INSTR_STORE_DEPTH)-1:0] load_addr,
     input  logic [63:0]                          load_data,
 
+    // op_id -> start_pc table registration (host-driven)
+    input  logic                                 op_tbl_wr_en,
+    input  logic [7:0]                           op_tbl_wr_op_id,
+    input  logic [$clog2(INSTR_STORE_DEPTH)-1:0] op_tbl_wr_start_pc,
+    input  logic                                 op_tbl_wr_valid_bit,
+
     // Local NIC MAC (driven into the response packet)
     input  logic [47:0]                          local_mac,
 
@@ -108,6 +114,30 @@ module tiara_datapath_top
       .mp_busy      (tia_busy)
   );
 
+  // op_id -> start_pc lookup so the wire path can dispatch many
+  // operators registered at different istore offsets.  When a packet
+  // arrives with op_id=N, we look up the table; if not registered we
+  // tie inv_start_pc=0 (operator at offset 0).
+  wire                                         lookup_valid;
+  wire [$clog2(INSTR_STORE_DEPTH)-1:0]         lookup_pc;
+
+  tiara_op_table #(
+      .NUM_OPS(256)
+  ) u_optbl (
+      .clk           (clk),
+      .rst_n         (rst_n),
+      .wr_en         (op_tbl_wr_en),
+      .wr_op_id      (op_tbl_wr_op_id),
+      .wr_start_pc   (op_tbl_wr_start_pc),
+      .wr_valid_bit  (op_tbl_wr_valid_bit),
+      .lookup_op_id  (rx_inv_op_id[7:0]),
+      .lookup_valid  (lookup_valid),
+      .lookup_start_pc(lookup_pc)
+  );
+
+  wire [$clog2(INSTR_STORE_DEPTH)-1:0] inv_start_pc =
+      lookup_valid ? lookup_pc : '0;
+
   tiara_synth_top #(
       .LOCAL_LATENCY_CYCLES(150),
       .RTT_CYCLES          (500),
@@ -121,9 +151,7 @@ module tiara_datapath_top
       .load_data    (load_data),
       .inv_valid    (rx_inv_valid),
       .inv_args     (rx_inv_args),
-      .inv_start_pc ('0),                  // single-op via wire path; for
-                                           // multi-op route op_id->start_pc
-                                           // through tiara_op_table here.
+      .inv_start_pc (inv_start_pc),
       .inv_busy     (tia_busy),
       .done         (tia_done),
       .done_result  (tia_done_result),

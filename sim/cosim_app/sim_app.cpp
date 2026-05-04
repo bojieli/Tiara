@@ -50,6 +50,10 @@ public:
         top_->load_en = 0;
         top_->load_addr = 0;
         top_->load_data = 0;
+        top_->op_tbl_wr_en       = 0;
+        top_->op_tbl_wr_op_id    = 0;
+        top_->op_tbl_wr_start_pc = 0;
+        top_->op_tbl_wr_valid_bit= 0;
         top_->local_mac = 0xAABBCCDDEE01ULL;
         for (int w = 0; w < 16; w++) top_->s_axis_rx_tdata[w] = 0;
         top_->s_axis_rx_tkeep  = 0;
@@ -86,6 +90,18 @@ public:
         }
         top_->load_en = 0;
         tick(2);
+    }
+
+    // Register an op_id -> start_pc binding so the wire dispatcher
+    // routes the matching invocation.
+    void register_op(uint8_t op_id, uint16_t start_pc) {
+        top_->op_tbl_wr_op_id    = op_id;
+        top_->op_tbl_wr_start_pc = start_pc;
+        top_->op_tbl_wr_valid_bit= 1;
+        top_->op_tbl_wr_en       = 1;
+        tick(1);
+        top_->op_tbl_wr_en       = 0;
+        tick(1);
     }
 
     void send_rx_packet(const std::vector<uint8_t>& bytes) {
@@ -355,6 +371,67 @@ int run_selftest() {
             if (!run_case(app, tc, 0x2000 + i)) { all = false; break; }
         }
         total++; if (all) passed++;
+    }
+
+    // 7) Wire-path multi-op dispatch via tiara_op_table.
+    //    Load two operators side-by-side in the istore at offsets
+    //    0 and 16, register op_id=0x10 -> pc=0 and op_id=0x20 -> pc=16,
+    //    then send invocations with both op_ids and check each picks
+    //    the right entry point.
+    {
+        std::vector<uint64_t> combined;
+        // Op A at offset 0: LI r1, 555; RET r1.
+        combined.push_back(encode_word(0x20, 1, 0, 0, 0xC, 555));
+        combined.push_back(encode_word(0x13, 0, 1, 0, 0,    0));
+        while (combined.size() < 16) combined.push_back(0);    // pad with NOPs
+        // Op B at offset 16: ADDI r1, r1, 7; RET r1   (returns arg + 7)
+        combined.push_back(encode_word(0x20, 1, 1, 0, 0x8, 7));
+        combined.push_back(encode_word(0x13, 0, 1, 0, 0,    0));
+        app.load_operator(combined);
+        app.register_op(/*op_id=*/0x10, /*start_pc=*/0);
+        app.register_op(/*op_id=*/0x20, /*start_pc=*/16);
+
+        // Op A invocation
+        {
+            TestCase tc;
+            tc.name = "op_table dispatch A (op=0x10)";
+            tc.prog = {};                // already loaded
+            tc.args = {{0,0,0,0,0,0,0,0}};
+            tc.expected_r1 = 555;
+            // run_case re-loads the operator; bypass that by inlining.
+            auto pkt = build_invocation(0x112233445566ULL, 0xAABBCCDDEE01ULL,
+                                         /*op_id=*/0x10, 0xA001, tc.args);
+            app.send_rx_packet(pkt);
+            std::array<uint8_t, 64> resp{};
+            bool got = app.wait_tx_response(resp);
+            uint32_t opid, tid; uint16_t status;
+            std::array<uint64_t, 4> result{};
+            bool ok = got && parse_response(resp, opid, tid, status, result)
+                     && (status & 1) && result[0] == 555;
+            std::printf("  [%-22s] r1=%lu  %s\n", tc.name,
+                        (unsigned long)result[0], ok ? "PASS" : "FAIL");
+            total++; if (ok) passed++;
+        }
+        // Op B invocation: arg=35, expect 42
+        {
+            TestCase tc;
+            tc.name = "op_table dispatch B (op=0x20)";
+            tc.prog = {};
+            tc.args = {{35,0,0,0,0,0,0,0}};
+            tc.expected_r1 = 42;
+            auto pkt = build_invocation(0x112233445566ULL, 0xAABBCCDDEE01ULL,
+                                         /*op_id=*/0x20, 0xA002, tc.args);
+            app.send_rx_packet(pkt);
+            std::array<uint8_t, 64> resp{};
+            bool got = app.wait_tx_response(resp);
+            uint32_t opid, tid; uint16_t status;
+            std::array<uint64_t, 4> result{};
+            bool ok = got && parse_response(resp, opid, tid, status, result)
+                     && (status & 1) && result[0] == 42;
+            std::printf("  [%-22s] r1=%lu  %s\n", tc.name,
+                        (unsigned long)result[0], ok ? "PASS" : "FAIL");
+            total++; if (ok) passed++;
+        }
     }
 
     std::printf("\n%d/%d test cases passed (%llu cycles total).\n",

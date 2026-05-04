@@ -38,11 +38,13 @@ module tiara_op_table
   logic [PC_W-1:0] tbl_pc    [0:NUM_OPS-1];
   logic            tbl_valid [0:NUM_OPS-1];
 
+  // Older Verilator rejects delayed assigns to array entries inside a
+  // for-loop.  Blocking-clear inside reset is fine here.
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       for (int i = 0; i < NUM_OPS; i++) begin
-        tbl_pc[i]    <= '0;
-        tbl_valid[i] <= 1'b0;
+        tbl_pc[i]    = '0;
+        tbl_valid[i] = 1'b0;
       end
     end else if (wr_en && wr_op_id < NUM_OPS) begin
       tbl_pc   [wr_op_id[IDX_W-1:0]] <= wr_start_pc;

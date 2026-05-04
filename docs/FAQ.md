@@ -53,20 +53,21 @@ reproduce without hardware.
 bitstream) but bringing it up requires the physical board.  See
 `docs/DEPLOYMENT.md`.
 
-## Why does my operator's memory access produce a verifier warning?
+## Why does my operator's memory access fail verification?
 
-Per paper §3.3, the verifier wants every memory access to be provably
-within a declared region.  Values produced by `LOAD` are *opaque* to
-the verifier (they came from memory, the verifier doesn't know what's
-there), so a chain like `LOAD r1, [r1+8]; LOAD r1, [r1+0]` triggers
-"opaque address; runtime region check required."
+Per paper §3.3, the verifier requires every memory access to be
+provably within a declared region.  Values produced by `LOAD` are
+*opaque* to the verifier (the verifier doesn't know what's stored
+there), so a chain like `LOAD r1, [r1+8]; LOAD r1, [r1+0]` is
+**rejected** with:
 
-The runtime region check still applies (the address is sanity-checked
-against the operator's declared regions before each memory access).
-The warning is just informational — your operator will run.
+    pc 0x...: LOAD via r1 is opaque (post-LOAD).  Insert `ANDI r1, r1,
+    MASK` to clamp into a declared region's offset window before using
+    as address.
 
-To make the warning go away, mask the loaded value with `ANDI` before
-using it as an address:
+To fix, mask the loaded value with `ANDI` before using it as an
+address. The `MASK` must fit inside *some* declared region's offset
+width:
 
 ```
 LOAD r1, [r1 + 8]
@@ -76,18 +77,19 @@ LOAD r1, [r1 + 0]
 
 The verifier then proves the bound statically.
 
-## Why does Vivado synthesis show 24K LUT for the memory stub?
+## What's in the synthesized 27K-LUT 1-MP build?
 
-That's `tiara_mem_simple.sv`, the synthesizable BRAM stub used during
-out-of-context synthesis to keep the design self-contained.  In a
-production build it's replaced by the Xilinx XDMA AXI master + Corundum
-DMA pipeline (which live outside the Tiara budget).  The Tiara
-*compute core* is ~3K LUT/MP; multiply by 8 to get ~25K LUT for the
-8-MP build.
+`tiara_synth_top` instantiates one MP plus the BRAM-backed memory
+stub `tiara_mem_simple.sv`. The 27K LUT (post-route) figure
+covers the MP, regfile, ALU, istore, loop stack, dispatcher, and the
+BRAM stub. In a production build the stub is swapped for
+`tiara_xdma_engine.sv`, which talks to Corundum's `m_axis_data_dma_*`
+descriptor port group + the host-side XDMA — DMA fabric area lives
+in the Corundum + XDMA budget, not in Tiara's.
 
-`make impl_app` reports the integrated app-block utilization
-(WNS = +0.077 ns @ 200 MHz post-route) — that's what matters for the
-paper's "8% of U50" claim.
+For the 8-MP scaling target (paper §4.1), see
+`make synth_8mp`: post-synthesis ~224K LUT, 16 BRAM-36, 80 DSP, WNS
++1.187 ns at 200 MHz. Post-route would shrink the LUT count further.
 
 ## What's the difference between `make synth`, `make synth_app`, and `make synth_8mp`?
 

@@ -36,11 +36,18 @@ microarchitectural choices made in `rtl/tiara_nic`.
 ```
 
 The RTL in this repo instantiates a **single MP** in
-`tiara_nic_top.sv` for cycle-accurate, per-MP characterisation. Scaling
-to 8 MPs is mechanical (replicate the `u_mp` instance and route all
-their `tiara_mem_if` interfaces through an arbiter). The throughput
-numbers in the paper are derived from `eval/scripts/baselines.py` once
-single-MP latency is measured.
+`tiara_nic_top.sv` for cycle-accurate, per-MP characterisation, and
+**eight MPs** with a first-free arbiter in `tiara_synth_top_n.sv`
+(driving `tiara_mp_array.sv` + `tiara_dispatcher_n.sv`) for the
+saturated-throughput results in the paper. The 8-MP version reuses
+the same MP, regfile, ALU, istore, and memory subsystem.
+
+The wire-side RX filter feeds the dispatcher through
+`tiara_op_table.sv`, a 256-entry lookup that maps the invocation
+packet's `op_id` (low 8 bits) to a `start_pc` in the shared istore.
+The host populates this table at registration time, so a single NIC
+can host many operators at different istore offsets and dispatch
+them in O(1).
 
 ## Memory processor pipeline
 
@@ -89,14 +96,27 @@ registration time.
 The unified 64-bit address `[device_id : 16][region_id : 16][offset : 32]`
 fans out to:
 
-* **PCIe DMA** (device 0) — `tiara_pcie_dma.sv`. Functional model with
-  configurable `LATENCY_CYCLES`. Default 150 cycles ≈ 0.75 µs at
-  200 MHz, calibrated against the U50 prototype.
+* **PCIe DMA** (device 0) — two implementations:
+  - `tiara_pcie_dma.sv` (default sim path): functional model backed by
+    a BRAM array, configurable `LATENCY_CYCLES`. Default 150 cycles
+    ≈ 0.75 µs at 200 MHz, calibrated against the U50 prototype.
+  - `tiara_xdma_engine.sv` (production path): emits Corundum-shaped
+    DMA descriptors (`m_axis_data_dma_read_desc_*` /
+    `..._write_desc_*`) plus a per-engine scratchpad on the
+    `data_dma_ram_*` interface — i.e., the same protocol that
+    `mqnic_app_block` uses for its on-NIC DMA. The Verilator-only
+    `tiara_xdma_host_stub.sv` simulates the Corundum DMA fabric
+    against an in-memory host array so this path is testable
+    without the rest of the Corundum stack. Selected at synth time
+    by instantiating `tiara_synth_top_xdma.sv` instead of
+    `tiara_synth_top.sv`.
 * **RDMA engine** (device > 0) — `tiara_rdma_engine.sv`. Functional
   model with configurable `RTT_CYCLES`. Default 500 cycles ≈ 2.5 µs.
 
 Both engines model an in-flight slot ring. The MP issues at most one
-operation per cycle and stalls in `S_MEM_WAIT` until completion.
+operation per cycle and stalls in `S_MEM_WAIT` until completion (LOAD
+/ CAS / sync MEMCPY); STORE and async MEMCPY are fire-and-forget and
+drained via the in-flight counter at `WAIT` boundaries.
 
 ## Static verification (paper §3.3)
 
@@ -108,9 +128,13 @@ time:
    count is `Σ outer_multiplier`; rejected if it exceeds the manifest's
    `max_dynamic`.
 2. **Memory bounds.** Interval analysis over registers. Argument
-   bounds come from the manifest; `LOAD` results are opaque (registered
-   as a soft warning that the runtime region check enforces).
-   Addresses must lie within a declared region.
+   bounds come from the manifest; `LOAD` results are opaque and must
+   be tamed by an explicit `ANDI mask` before being used as an
+   address (paper §3.3 mandate; the verifier rejects opaque-as-address
+   with a clear diagnostic). Region tags propagate through `ADD`,
+   so the canonical pointer-arithmetic pattern
+   `LOAD → ANDI(offset_mask) → ADD(region_base)` is recognized and
+   admitted. Addresses must lie within a declared region.
 3. **Resource caps.** Loop nesting ≤ 8, in-flight async ≤ 32,
    instructions ≤ 1024.
 

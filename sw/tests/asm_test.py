@@ -128,6 +128,50 @@ class VerifierTest(unittest.TestCase):
         # max_dynamic=512 < bound=4096+1; verifier should reject.
         self.assertFalse(rep.ok)
 
+    def test_andi_inherits_region_via_add(self):
+        """Pointer arithmetic pattern (paper §3.3): a LOAD result is
+        masked with ANDI to clamp into a region's offset window, then
+        ADDed to a region-tagged base register.  The result inherits
+        the region tag and the verifier should accept the downstream
+        LOAD without complaint.
+        """
+        prog = assemble("""
+          .arg base r1
+          LOAD r2, [r1 + 0]
+          ANDI r2, r2, 0xFF8
+          ADD  r2, r2, r1
+          LOAD r3, [r2 + 0]
+          RET  r3
+        """, name="andi_inherit")
+        rep = verify(prog, self._manifest())
+        self.assertTrue(rep.ok, msg=rep.issues)
+
+    def test_reject_andi_too_wide_for_region(self):
+        """An ANDI mask wider than every declared region's offset width
+        must be rejected — the loaded value could escape the region.
+        """
+        prog = assemble("""
+          .arg addr r1
+          LOAD r2, [r1 + 0]
+          ANDI r2, r2, 0xFFFFFFFF8
+          LOAD r3, [r2 + 0]
+          RET  r3
+        """, name="andi_too_wide")
+        rep = verify(prog, self._manifest())
+        self.assertFalse(rep.ok)
+
+    def test_reject_unmasked_load(self):
+        """LOAD r2 → use as address without intervening ANDI is rejected:
+        opaque values cannot be addresses (paper §3.3 mandate)."""
+        prog = assemble("""
+          .arg addr r1
+          LOAD r2, [r1 + 0]
+          LOAD r3, [r2 + 0]
+          RET  r3
+        """, name="opaque_addr")
+        rep = verify(prog, self._manifest())
+        self.assertFalse(rep.ok)
+
 
 if __name__ == "__main__":
     unittest.main()

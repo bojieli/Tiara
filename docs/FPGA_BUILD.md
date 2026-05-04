@@ -11,12 +11,15 @@ The default `tcl/synth.tcl` synthesizes `tiara_nic_top` in **out-of-context
 
 | Component                        | Synthesized? | Notes                                               |
 |----------------------------------|--------------|-----------------------------------------------------|
-| `tiara_alu`, `tiara_regfile`     | yes          | core compute path                                   |
+| `tiara_alu`, `tiara_regfile`     | yes          | core compute path; regfile is 3R1W                  |
 | `tiara_istore`                   | yes          | inferred BRAM (1024 × 64 bit)                       |
 | `tiara_loop_stack`               | yes          |                                                     |
 | `tiara_mp`, `tiara_dispatcher`   | yes          |                                                     |
-| `tiara_pcie_dma`                 | yes (stub)   | small BRAM stub — replace with Xilinx XDMA in production |
-| `tiara_rdma_engine`              | yes (stub)   | small per-peer BRAM — replace with Corundum in production |
+| `tiara_op_table`                 | yes          | 256-entry op_id → start_pc lookup (wire path)       |
+| `tiara_mp_array`, `tiara_dispatcher_n` | yes    | 8-MP scaling                                         |
+| `tiara_pcie_dma`                 | yes (stub)   | small BRAM stub for OOC; production uses `tiara_xdma_engine` |
+| `tiara_xdma_engine`              | yes          | emits Corundum DMA descriptors; consumes `data_dma_ram_*` |
+| `tiara_rdma_engine`              | yes (stub)   | small per-peer BRAM — replace with Corundum RDMA in production |
 
 Sim-only constructs (`initial` blocks, `export "DPI-C" task`,
 multi-cycle blocking copy loops in `always_ff`) are gated with
@@ -65,42 +68,47 @@ synth/drc_post_route.rpt         DRC checks
 
 ## Calibration vs. paper
 
-The paper §4.1 reports **~64 K LUTs, ~78 BRAMs, 200 MHz** for the
-Tiara logic on U50 (~8% of the device). The ship-as-default RTL in
-this repo synthesizes a **single MP** (the cycle-accurate testbench
-configuration), so the expected utilization is:
+Measured utilization on U50 (`xcu50-fsvh2104-2-e`, 200 MHz target,
+Vivado 2025.2):
 
-| Resource      | Paper (8 MPs) | This repo (1 MP, expected) |
-|---------------|--------------:|---------------------------:|
-| LUT           | ~64 K         | ~6–10 K                    |
-| FF            | (not reported)| ~3–5 K                     |
-| BRAM (36 Kb)  | ~78           | ~8–14                      |
-| Fmax          | 200 MHz       | 200 MHz target             |
+| Configuration                          | LUT     | FF      | BRAM-36 | DSP | WNS         |
+|----------------------------------------|--------:|--------:|--------:|----:|------------:|
+| 1-MP core (post-route)                 | 27,286  | 84,733  | 2       | 10  | +0.184 ns   |
+| Tiara + Corundum app block (post-route)| 28,235  | 86,400  | 2       | 10  | +0.077 ns   |
+| 8-MP core (post-synth)                 | 224,465 | 676,765 | 16      | 80  | +1.187 ns   |
 
-Multiply by 8 to estimate the full design. To synthesize the 8-MP
-core directly, add a parameterised wrapper around `tiara_mp` —
-the `MP_ID` parameter on `tiara_mp` is already there.
+The 8-MP build uses ~26% of the U50's LUT budget, ~1% of BRAM, and
+~1% of DSP — well within the device. Post-route is expected to
+shrink the LUT count further (Vivado's place-and-route routinely
+saves 10-25% over post-synth). The integrated app-block adds only
+~1 K LUTs over the standalone Tiara core, since Corundum's wrapper
+(`mqnic_app_block`) is mostly pass-through wiring on top of the
+data path Tiara owns.
 
 ## Replacing the BFMs with real IP
 
-For a deployable bitstream:
+The repo ships two memory-subsystem flavors:
 
-1. **PCIe DMA**: replace `tiara_pcie_dma.sv` instantiation in
-   `tiara_memory_subsystem.sv` with the Xilinx XDMA AXI master IP.
-   Generate with Vivado IP Catalog:
-   `Vivado → IP Catalog → DMA/Bridge Subsystem for PCI Express → XDMA`.
+1. **`tiara_mem_simple` / `tiara_pcie_dma`** (default OOC) — BRAM-backed
+   functional model.  Synthesizes cleanly into a few BRAM tiles, used
+   for the post-route timing numbers above.
 
-2. **RDMA engine**: replace `tiara_rdma_engine.sv` with the
-   Corundum RDMA pipeline. Clone:
-   ```
-   git clone https://github.com/corundum/corundum
-   cp -r corundum/fpga/mqnic/AU50/fpga_25g/rtl/* path/to/integration/
-   ```
-   and wire the Tiara request/response interface to Corundum's
-   message-level RDMA endpoints.
+2. **`tiara_xdma_engine` + `tiara_synth_top_xdma`** (production) —
+   emits Corundum-shaped DMA descriptors against the
+   `m_axis_data_dma_*` port group + `data_dma_ram_*` slave port group
+   of `mqnic_app_block`. To deploy on the real U50:
 
-3. **Top**: build a `tiara_nic_full_top.sv` that places XDMA, Corundum,
-   and Tiara on the same clock + AXI interconnect.
+   a. Build the integrated bitstream with
+      `scripts/build_bitstream.sh`, which splices Tiara into Corundum's
+      mqnic AU50 fabric, sets `APP_ENABLE=1`, and runs the full Vivado
+      flow (Vivado runtime ~45-90 min).
+   b. Or hand-instantiate `tiara_xdma_engine` from
+      `mqnic_app_block.sv` and connect its `m_axis_dma_*` /
+      `dma_ram_*` ports to the matching Corundum slave/master ports.
+
+3. **RDMA engine**: `tiara_rdma_engine.sv` is still a BRAM-backed BFM
+   in this repo. Replacing it with Corundum's RDMA pipeline is a
+   future-work item (paper §3.2 cross-host MEMCPY).
 
 ## Common issues
 

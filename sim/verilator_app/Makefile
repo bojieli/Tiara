@@ -22,6 +22,7 @@ RTL_SRCS := $(RTL_TIA)/tiara_alu.sv \
             $(RTL_TIA)/tiara_mp.sv \
             $(RTL_TIA)/tiara_dispatcher.sv \
             $(RTL_TIA)/tiara_synth_top.sv \
+            $(RTL_TIA)/tiara_op_table.sv \
             $(RTL_INT)/tiara_rx_filter.sv \
             $(RTL_INT)/tiara_tx_resp.sv \
             $(RTL_INT)/tiara_tx_arb.sv \

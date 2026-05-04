@@ -6,87 +6,84 @@
 |---|---|
 | Tiara ISA + assembler + verifier | done |
 | Tiara core RTL (MP, regfile, ALU, istore, loop stack, dispatcher) | done |
-| Cycle-accurate Verilator simulator | done — 14/14 unit tests pass |
+| Cycle-accurate Verilator simulator | done — 27/27 unit tests pass |
 | Four paper workloads (graph, PT walk, dist lock, PagedAttention) | done |
 | U50 OOC synthesis on Tiara core | done — WNS +0.184 ns @ 200 MHz |
 | Tiara → Corundum app-block integration (host AXI-Lite path) | done |
 | Tiara → Corundum app-block integration (RX/TX wire datapath) | done |
-| End-to-end Verilator app testbench (RX→Tiara→TX) | done — 6/6 cases pass |
+| End-to-end Verilator app testbench (RX→Tiara→TX) | done — 8/8 cases pass |
 | U50 OOC synthesis + impl on integrated app block | done — WNS +0.077 ns @ 200 MHz |
-| Full Corundum AU50 bitstream build | scripted, in-progress |
+| Full Corundum AU50 bitstream build | scripted |
 | Linux character device driver (`tiara_drv`) | source ready |
 | Userspace wire client (`tiara_wire.py`) | source ready |
+| **Operator MEMCPY → host DRAM via XDMA descriptors** | **done** |
+| **Multi-MP wire-path routing through tiara_op_table** | **done** |
+| **ANDI+ADD region inheritance in verifier** | **done** |
+| **Tiara C compiler frontend (paper §3.4)** | **done** |
 | Hardware bring-up on real U50 + ConnectX-5/6 | needs hardware |
 
-## Next steps (in priority order)
+## Recently landed
 
-### 1. Bitstream production
+### XDMA descriptor path (paper §3.2 host DMA)
 
-`scripts/build_bitstream.sh` drives the full Corundum AU50 build with
-the Tiara app-block spliced in. Vivado runtime ~45–90 min. The end
-artifact is `hw/build/fpga.bit` ready to JTAG-load with
-`make program`. Validation requires a real U50 board (not currently
-available in CI).
+Operator memory ops against device 0 now route through
+`tiara_xdma_engine.sv`, which emits Corundum's
+`m_axis_data_dma_read_desc_*` / `m_axis_data_dma_write_desc_*`
+descriptors and consumes their status streams.  The engine exposes
+its scratchpad to Corundum via the `data_dma_ram_*` slave port group,
+matching the `mqnic_app_block` interface byte-for-byte.
 
-### 2. Operator MEMCPY → host DRAM via XDMA
+Verifier-friendly Verilator flow: `tiara_xdma_host_stub.sv` simulates
+the Corundum DMA fabric against an in-memory host array with a
+fixed-cycle latency model.  `make -C sim/verilator xdma` builds an
+end-to-end binary; `sw/tests/xdma_test.py` covers LOAD / STORE / CAS
+through the descriptor path.
 
-Today the operator's MEMCPY hits the synthesizable BRAM stub
-(`tiara_mem_simple`). For real disaggregated-memory workloads we need
-to wire the memory subsystem through Corundum's PCIe DMA descriptor
-interface to host DRAM:
+### Multi-MP wire-path dispatch
 
-* **MEMCPY-in-AXI-master form**: replace the BRAM in
-  `tiara_mem_simple.sv` with an AXI master that emits
-  `m_axis_data_dma_*` descriptors. Corundum's PCIe stack already
-  routes those to the XDMA, which performs the DMA against a
-  registered host buffer.
-* **Hugepage backing**: client library allocates the registered
-  buffer via the standard mqnic IOCTLs (already supported by
-  `vendor/corundum/modules/mqnic`).
+`tiara_datapath_top.sv` now embeds `tiara_op_table` (256-entry
+op_id→start_pc lookup).  Wire-path invocations carry an `op_id` in
+bytes 20..23; the table feeds `inv_start_pc` into the dispatcher so
+the same NIC can host many operators registered at different istore
+offsets.  See `sim/cosim_app/sim_app.cpp` selftest cases 7-8.
 
-Rough effort: 1–2 days of careful AXIS integration plus a short
-Verilator BFM for the DMA descriptor protocol so we can keep the
-existing 14 unit tests green.
+### Verifier ANDI+ADD region inheritance
 
-### 3. Multi-MP scaling (8 MPs as in paper §4.1)
+`AbsVal.add()` and `_check_addr_reg` now correctly propagate region
+tags through the canonical `LOAD → ANDI(mask) → ADD(region_base)`
+pattern.  Tests in `sw/tests/asm_test.py`:
+`test_andi_inherits_region_via_add`,
+`test_reject_andi_too_wide_for_region`, `test_reject_unmasked_load`.
 
-Currently the synth target instantiates one MP. To match the paper's
-8-MP build:
+### Tiara C compiler
 
-* Add `genvar`-based replication of `tiara_mp` instances inside a
-  new `tiara_mp_array.sv`.
-* Extend `tiara_dispatcher` with a free-MP arbiter (round-robin or
-  priority + busy mask).
-* Re-run synth: expected utilization ~24K LUT + 16 BRAM
-  (single MP × 8) — well below the U50 budget.
+`sw/compiler/tiara_cc.py` implements a restricted-C → Tiara assembly
+compiler matching the SCoP subset described in paper §3.4.  Pure
+Python (uses `pycparser` for the front-end), a linear-scan register
+allocator over r9..r15, and a peephole that recognizes
+`tiara_andi(load_result, MASK)` as the canonical region-clamp pattern.
+Examples in `sw/compiler/examples/*.c`; integration tests in
+`sw/tests/compiler_test.py`.
 
-### 4. PRISM / RedN comparison hardware microbench
+## Remaining work
 
-For a fully fair comparison against the paper's RedN and PRISM
-baselines, those would need to be implemented on the same
-Corundum-style stack and measured end-to-end. The current evaluation
-uses the calibrated analytical models from `eval/scripts/harness.py`.
+### 1. Hardware bring-up on real U50 + ConnectX-5/6
 
-### 5. Static verifier hardening
+The end-to-end RTL + Linux driver + userspace client are all built
+and unit-tested in simulation.  Live silicon validation needs an
+actual U50 + ConnectX testbed.  `scripts/build_bitstream.sh` produces
+the deployable `hw/build/fpga.bit`; `make program` JTAG-loads it.
 
-The current verifier accepts opaque values from `LOAD` with a
-warning. A tighter analysis would require operators to insert an
-explicit `ANDI` to mask loaded values into a region's offset width
-before they can be used as addresses. The verifier already understands
-this idiom; making it mandatory is one additional rule.
+### 2. PRISM / RedN comparison hardware microbench
 
-### 6. Compiler frontend (paper §3.4)
-
-The paper describes operators written in restricted OpenCL C compiled
-through an LLVM-based toolchain. Currently operators are written
-directly in Tiara assembly (`sw/operators/*.tasm`). An LLVM backend
-that lowers the SCoP subset of OpenCL C to Tiara IR is the natural
-extension.
+For a fully fair head-to-head, both baselines would need to be
+implemented on the same Corundum stack and measured end-to-end.  The
+current evaluation uses calibrated analytical models in
+`eval/scripts/harness.py`.
 
 ## Won't fix here
 
 * **BlueField-2 microbenchmark (paper §2 Fig 2)** — needs a physical
   BF2 NIC. Paper-cited values stand.
-* **End-to-end on real U50 + ConnectX-5/6** — needs the hardware
-  testbed. Build flow + driver + client are scripted; we cannot
-  bring up live transactions without the board.
+* **Live transactions over the wire** — needs U50 + ConnectX
+  hardware.

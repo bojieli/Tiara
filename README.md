@@ -17,40 +17,59 @@ Remote Memory Access”*. It contains:
 
 * **SystemVerilog RTL** (`rtl/tiara_nic`) for the Tiara NIC
   data path: 16-register memory processor (MP), private 1024-entry
-  instruction store, integer ALU, loop stack, PCIe DMA engine BFM, and
-  RDMA engine BFM. Targets AMD Alveo U50 (Corundum NIC stack).
-* **Cycle-accurate Verilator simulator** (`sim/`) that executes
-  registered operators at parametrised clock and PCIe latency.
+  instruction store, integer ALU, loop stack, PCIe DMA engine BFM,
+  RDMA engine BFM, **Corundum-shaped XDMA descriptor engine**, and an
+  **op_id → start_pc lookup table** for multi-operator wire dispatch.
+  Targets AMD Alveo U50 (Corundum NIC stack).
+* **Cycle-accurate Verilator simulator** (`sim/`) — two binaries:
+  the BRAM-backed model (`Vtiara_nic_top`) and the descriptor-driven
+  XDMA flow (`Vtiara_synth_top_xdma`).
 * **ISA toolchain** (`sw/asm`, `sw/verifier`) — a Python assembler and
   static verifier (forward-only jumps, bounded loops, region-bounded
-  addresses, eBPF-style termination guarantee).
+  addresses, ANDI+ADD region inheritance, eBPF-style termination
+  guarantee).
+* **Restricted-C compiler** (`sw/compiler/tiara_cc.py`) — paper §3.4
+  SCoP subset of C, lowered through a linear-scan allocator to Tiara
+  assembly. Examples in `sw/compiler/examples/`.
 * **C client library** (`sw/client`, `sw/include/tiara.h`).
 * **Eval harness + reproducibility kit** (`eval/scripts`) that runs
-  all four paper workloads against the cycle-accurate simulator and
+  all five paper workloads against the cycle-accurate simulator and
   emits the `*.dat` files that drive the paper's plots.
 
-## Quick start
+## 60-second quickstart
 
 ```bash
-# 0) deps:  apt-get install verilator iverilog gtkwave python3-numpy \
-#                            python3-matplotlib gnuplot
+# 0) deps (Ubuntu 22.04+):
+sudo apt-get install -y verilator gtkwave python3-numpy python3-matplotlib \
+                        python3-pycparser gnuplot
 
-# 1) generate the auto-derived SystemVerilog ISA package
-make docs
-
-# 2) build the cycle-accurate simulator
+# 1) build the cycle-accurate simulator (~30s)
 make sim
 
-# 3) self-test (LI 42 ; RET) — should print r1=42, 18 cycles
+# 2) sanity smoke test  (LI 42 ; RET) → r1=42 in 18 cycles
 make selftest
 
-# 4) run the full unit-test + integration suite
-make test
+# 3) full Python + sim test suite (29 cases, <1s)
+python3 -m pytest sw/tests/
 
-# 5) reproduce the paper's four workload results
+# 4) descriptor-path simulator (Tiara ←→ Corundum-style DMA fabric)
+make -C sim/verilator xdma run_xdma
+
+# 5) reproduce the paper's five workloads + plots
 make eval
-ls eval/results/*.dat eval/figures/*.png
+ls eval/results/*.dat eval/figures/*.{png,pdf}
+
+# 6) one-line aggregate report
+python3 scripts/make_summary.py && cat reports/SUMMARY.md
+
+# 7) compile a Tiara C operator → assembly → run
+python3 sw/compiler/tiara_cc.py sw/compiler/examples/graph_walk.c
+PYTHONPATH=sw/asm python3 sw/asm/tiara_asm.py \
+    sw/compiler/examples/graph_walk.tasm
 ```
+
+If any step fails see `docs/REPRODUCIBILITY.md` for environment versions
+and `docs/FAQ.md` for common issues.
 
 `make eval` builds the simulator, runs four workloads (graph traversal,
 3-level page-table walk, distributed lock, PagedAttention block
@@ -60,30 +79,45 @@ gather), and renders comparison plots into `eval/figures/`.
 
 ```
 rtl/tiara_nic/            SystemVerilog RTL
-  tiara_alu.sv               combinational integer ALU
-  tiara_regfile.sv           16x64-bit 2R1W register file
+  tiara_alu.sv               combinational integer ALU + 2-stage MUL
+  tiara_regfile.sv           16x64-bit 3R1W register file
   tiara_istore.sv            BRAM instruction store (write-once at registration)
   tiara_loop_stack.sv        bounded loop frame LIFO (depth 8)
-  tiara_pcie_dma.sv          host-DRAM access path BFM (configurable latency)
+  tiara_pcie_dma.sv          host-DRAM access path BFM (cycle-accurate sim)
+  tiara_xdma_engine.sv       Corundum-shaped DMA descriptor engine (production)
+  tiara_xdma_host_stub.sv    Verilator-only host-DMA fabric BFM
   tiara_rdma_engine.sv       outbound RDMA path BFM (configurable RTT)
   tiara_memory_subsystem.sv  device-id router between PCIe DMA / RDMA
   tiara_mp.sv                memory processor (per-task scalar core)
-  tiara_dispatcher.sv        task dispatcher (single-MP wrapper)
+  tiara_mp_array.sv          8-MP wrapper with broadcast operator load
+  tiara_dispatcher.sv        single-MP task dispatcher
+  tiara_dispatcher_n.sv      N-MP first-free arbiter
+  tiara_op_table.sv          op_id → start_pc lookup (256 entries)
   tiara_nic_top.sv           top-level: dispatcher + MP + memory subsystem
+  tiara_synth_top.sv         single-MP synth target with BRAM stub
+  tiara_synth_top_n.sv       8-MP synth target
+  tiara_synth_top_xdma.sv    XDMA descriptor flow (Tiara + Corundum DMA fabric)
 rtl/include/                  auto-generated SV ISA package
-sim/cosim/                    C++ harness (Verilator BFM, sim_main)
-sim/verilator/                build directory + Makefile
+integration/corundum_app/rtl/ Corundum mqnic_app_block + RX filter + TX resp + datapath_top
+sim/cosim/                    C++ harness for Vtiara_nic_top + Vtiara_synth_top_xdma
+sim/cosim_app/                C++ harness for the wire-path datapath_top
+sim/verilator/, verilator_app/ Verilator builds (3 binaries)
 sw/asm/                       Python assembler + ISA constants
-sw/verifier/                  static verifier (termination + region bounds)
+sw/verifier/                  static verifier (termination + region bounds + ANDI inheritance)
+sw/compiler/                  Tiara C compiler (paper §3.4 SCoP subset → assembly)
 sw/operators/                 example operators in Tiara assembly + manifests
 sw/client/                    C client library (sim & deployment paths)
 sw/include/tiara.h            client public header
-sw/tests/                     unittest suite (round-trip, sim integration)
-docs/                         ISA reference and architecture notes
+sw/tests/                     unittest suite (29 cases: assembler, verifier, sim, compiler, XDMA, wire)
+docs/                         ISA reference, architecture notes, compiler guide, FAQ
 eval/scripts/                 harness, plot rendering, run_all.sh
 eval/results/                 generated CSVs / .dat files
-eval/figures/                 generated plots
-scripts/gen_isa_pkg.py        keeps RTL & Python ISA constants in sync
+eval/figures/                 generated plots (PNG, PDF, EPS)
+host/driver/                  Linux character device driver (tiara_drv)
+host/client/                  Userspace wire client (tiara_wire.py)
+scripts/                      build_bitstream.sh, gen_isa_pkg.py, make_summary.py
+tcl/                          Vivado synth/impl scripts
+reports/                      synth reports + headline SUMMARY.md
 ```
 
 ## Reproducing the paper's results
@@ -100,11 +134,11 @@ After `make eval`, the headline numbers go to `reports/SUMMARY.md`:
 
 | Result | Tiara | Baseline | Speedup | Paper claim |
 |---|---|---|---|---|
-| Graph traversal d=10        | 8.6 µs        | 25.0 µs (RDMA)        | **2.9×** | 2.5× |
-| Page-table walk             | 3.7 µs        | 10.0 µs (RDMA)        | **2.7×** | 52% lower (~2.1×) |
-| Distributed lock 1 client   | 4.3 µs        | 12.5 µs (RDMA)        | **2.9×** | 2.5× |
-| PagedAttention 8 KB blocks  | 12.1 GB/s     | 4.4 GB/s (RDMA, batch)| **2.8×** | 2.8× |
-| MoE expert gather (32 exp.) | 18.1 µs       | 26.7 µs (RDMA)        | **1.5×** | (paper Table 1, not eval'd in paper) |
+| Graph traversal d=10        | 8.78 µs       | 25.0 µs (RDMA)        | **2.85×** | 2.85× |
+| Page-table walk             | 3.75 µs       | 10.0 µs (RDMA)        | **2.7×**  | 62% lower (2.7×) |
+| Distributed lock 1 client   | 4.34 µs       | 12.5 µs (RDMA)        | **2.88×** | 2.3× at 16 clients |
+| PagedAttention 8 KB blocks  | 12.10 GB/s    | 4.35 GB/s (RDMA, batch)| **2.78×** | 2.78× |
+| MoE expert gather           | 3.19 µs       | 5.68 µs (RDMA)        | **1.78×** | (paper Table 1, not eval'd in paper) |
 
 | Vivado on U50 (xcu50-fsvh2104-2-e, 200 MHz) | LUT | FF | BRAM | DSP | WNS |
 |---|---:|---:|---:|---:|---:|
@@ -117,6 +151,23 @@ Every figure in the paper is produced from a `*.dat` file in
 (5 ns @ 200 MHz) and PCIe DMA latency (150 cycles ≈ 0.75 µs) are
 the calibrated parameters from the FPGA prototype, so the reported µs
 values reflect what a real Alveo U50 build produces.
+
+## Documentation
+
+| File | Topic |
+|---|---|
+| [`docs/TUTORIAL.md`](docs/TUTORIAL.md)             | 30-minute walk: write, verify, simulate your first operator |
+| [`docs/SYSTEM_OVERVIEW.md`](docs/SYSTEM_OVERVIEW.md) | One-page big picture: what every component does and where it lives |
+| [`docs/ISA.md`](docs/ISA.md)                       | Binary contract: opcodes, encoding, semantics |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)     | NIC microarchitecture: MP states, op_table, XDMA engine, verifier rules |
+| [`docs/COMPILER.md`](docs/COMPILER.md)             | Tiara C subset, builtins, examples |
+| [`docs/ADDING_OPERATORS.md`](docs/ADDING_OPERATORS.md) | How to add a new operator end-to-end |
+| [`docs/WIRE_PROTOCOL.md`](docs/WIRE_PROTOCOL.md)   | Custom-Ethertype invocation/response packet formats |
+| [`docs/FPGA_BUILD.md`](docs/FPGA_BUILD.md)         | Vivado synth/impl flow, U50 utilization, BFM-to-IP swap |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)         | Bitstream load, kernel modules, ConnectX peer setup |
+| [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) | Versions, expected numbers, troubleshooting |
+| [`docs/FAQ.md`](docs/FAQ.md)                       | Common pitfalls and gotchas |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md)               | What's done; what's left; what won't be done here |
 
 ## Production build (real FPGA)
 
