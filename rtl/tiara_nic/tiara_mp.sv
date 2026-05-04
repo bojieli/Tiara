@@ -30,11 +30,12 @@ module tiara_mp
     input  logic                  rst_n,
 
     // Task dispatch ----------------------------------------------------
-    input  logic                  task_start,
-    input  logic [63:0]           task_args [0:7],
-    output logic                  task_done,
-    output logic [63:0]           task_result [0:3],
-    output logic                  task_err,
+    input  logic                                            task_start,
+    input  logic [$clog2(INSTR_STORE_DEPTH)-1:0]            task_start_pc,
+    input  logic [63:0]                                     task_args [0:7],
+    output logic                                            task_done,
+    output logic [63:0]                                     task_result [0:3],
+    output logic                                            task_err,
 
     // Instruction store side (write at registration) ------------------
     input  logic                                wr_en,
@@ -257,7 +258,10 @@ module tiara_mp
       unique case (state)
         S_IDLE: begin
           if (task_start) begin
-            pc            <= '0;
+            // Start at the operator's registered offset.  When only
+            // one operator is loaded, callers pass task_start_pc=0
+            // and the operator lives at istore[0..N-1].
+            pc            <= task_start_pc;
             args_loaded   <= 1'b0;
             arg_idx       <= '0;
             inflight      <= '0;

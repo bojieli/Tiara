@@ -29,6 +29,7 @@ Simulator::Simulator(const std::string& trace_path)
     top_->load_addr = 0;
     top_->load_data = 0;
     top_->inv_valid = 0;
+    top_->inv_start_pc = 0;
     for (int i = 0; i < 8; i++) top_->inv_args[i] = 0;
     reset();
 }
@@ -92,8 +93,10 @@ void Simulator::load_operator_file(const std::string& path) {
 }
 
 InvocationResult Simulator::invoke(const std::array<uint64_t, 8>& args,
-                                   uint64_t max_cycles) {
+                                   uint64_t max_cycles,
+                                   uint16_t start_pc) {
     for (int i = 0; i < 8; i++) top_->inv_args[i] = args[i];
+    top_->inv_start_pc = start_pc;
     top_->inv_valid = 1;
     tick(1);
     top_->inv_valid = 0;

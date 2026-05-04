@@ -121,6 +121,9 @@ module tiara_datapath_top
       .load_data    (load_data),
       .inv_valid    (rx_inv_valid),
       .inv_args     (rx_inv_args),
+      .inv_start_pc ('0),                  // single-op via wire path; for
+                                           // multi-op route op_id->start_pc
+                                           // through tiara_op_table here.
       .inv_busy     (tia_busy),
       .done         (tia_done),
       .done_result  (tia_done_result),

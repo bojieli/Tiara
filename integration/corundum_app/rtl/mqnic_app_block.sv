@@ -679,6 +679,8 @@ tiara_synth_top #(
     .load_data    (tiara_load_data),
     .inv_valid    (tiara_inv_valid),
     .inv_args     (tiara_inv_args),
+    .inv_start_pc (10'd0),                  // single-op slot; integrate
+                                            // tiara_op_table for multi-op
     .inv_busy     (tiara_inv_busy),
     .done         (tiara_done),
     .done_result  (tiara_done_result),

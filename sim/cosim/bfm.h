@@ -41,10 +41,13 @@ class Simulator {
     void   load_operator(const std::vector<uint64_t>& words);
     void   load_operator_file(const std::string& path);
 
-    // Run the operator with the given 8 arguments.  Returns when the
-    // dispatcher signals `done`.  Times out after `max_cycles`.
+    // Run the operator with the given 8 arguments, starting the MP
+    // at `start_pc` (default 0 — the istore offset where you loaded
+    // the operator).  Returns when the dispatcher signals `done`.
+    // Times out after `max_cycles`.
     InvocationResult invoke(const std::array<uint64_t, 8>& args,
-                            uint64_t max_cycles = 1'000'000);
+                            uint64_t max_cycles = 1'000'000,
+                            uint16_t start_pc = 0);
 
     // Backing-memory access (host DRAM)
     void     dma_poke (uint32_t word_addr, uint64_t value);

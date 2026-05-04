@@ -27,11 +27,12 @@ module tiara_dispatcher_n
     input  logic                  rst_n,
 
     // Host invocation port
-    input  logic                  inv_valid,
-    input  logic [63:0]           inv_args [0:7],
-    input  logic [TAG_W-1:0]      inv_tag,        // arbitrary per-call tag
-    output logic                  inv_busy,        // all MPs busy
-    output logic                  inv_accept,      // pulse when accepted
+    input  logic                                            inv_valid,
+    input  logic [63:0]                                     inv_args [0:7],
+    input  logic [$clog2(INSTR_STORE_DEPTH)-1:0]            inv_start_pc,
+    input  logic [TAG_W-1:0]                                inv_tag,
+    output logic                                            inv_busy,
+    output logic                                            inv_accept,
 
     // Result port (one-cycle pulse per completion)
     output logic                  done,
@@ -40,11 +41,12 @@ module tiara_dispatcher_n
     output logic                  done_err,
 
     // Fan-out to N MPs
-    output logic                  mp_start [0:NUM_MPS-1],
-    output logic [63:0]           mp_args  [0:NUM_MPS-1][0:7],
-    input  logic                  mp_done  [0:NUM_MPS-1],
-    input  logic [63:0]           mp_result[0:NUM_MPS-1][0:3],
-    input  logic                  mp_err   [0:NUM_MPS-1]
+    output logic                                            mp_start    [0:NUM_MPS-1],
+    output logic [$clog2(INSTR_STORE_DEPTH)-1:0]            mp_start_pc [0:NUM_MPS-1],
+    output logic [63:0]                                     mp_args     [0:NUM_MPS-1][0:7],
+    input  logic                                            mp_done     [0:NUM_MPS-1],
+    input  logic [63:0]                                     mp_result   [0:NUM_MPS-1][0:3],
+    input  logic                                            mp_err      [0:NUM_MPS-1]
 );
 
   // Per-MP busy state (in-flight task)
@@ -94,8 +96,9 @@ module tiara_dispatcher_n
       done_err <= 1'b0;
       done_tag <= '0;
       for (int i = 0; i < NUM_MPS; i++) begin
-        tag_q[i]    <= '0;
-        mp_start[i] <= 1'b0;
+        tag_q[i]       <= '0;
+        mp_start[i]    <= 1'b0;
+        mp_start_pc[i] <= '0;
         for (int j = 0; j < 4; j++) done_result[j] <= 64'd0;
         for (int j = 0; j < 8; j++) mp_args[i][j]  <= 64'd0;
       end
@@ -107,9 +110,10 @@ module tiara_dispatcher_n
       // Dispatch
       if (inv_valid && any_free) begin
         for (int j = 0; j < 8; j++) mp_args[free_idx][j] <= inv_args[j];
-        mp_start[free_idx] <= 1'b1;
-        busy[free_idx]     <= 1'b1;
-        tag_q[free_idx]    <= inv_tag;
+        mp_start[free_idx]    <= 1'b1;
+        mp_start_pc[free_idx] <= inv_start_pc;
+        busy[free_idx]        <= 1'b1;
+        tag_q[free_idx]       <= inv_tag;
       end
 
       // Completion

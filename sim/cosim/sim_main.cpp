@@ -91,6 +91,7 @@ int main(int argc, char** argv) {
     std::array<uint64_t, 8> args{};
     std::vector<std::pair<int, std::string>> peer_seeds;
     uint64_t max_cycles = 1'000'000;
+    uint16_t start_pc   = 0;
     bool selftest = false;
 
     for (int i = 1; i < argc; i++) {
@@ -100,6 +101,7 @@ int main(int argc, char** argv) {
         else if (a == "--dma" && i+1 < argc)  dma_seed = argv[++i];
         else if (a == "--trace" && i+1 < argc) trace = argv[++i];
         else if (a == "--cycles" && i+1 < argc) max_cycles = std::strtoull(argv[++i], nullptr, 10);
+        else if (a == "--start_pc" && i+1 < argc) start_pc = static_cast<uint16_t>(std::strtoul(argv[++i], nullptr, 0));
         else if (a == "--args" && i+1 < argc) {
             std::string s = argv[++i];
             std::size_t pos = 0, j = 0;
@@ -129,7 +131,7 @@ int main(int argc, char** argv) {
     for (auto& kv : peer_seeds) seed_from(sim, kv.second, kv.first);
 
     sim.load_operator_file(op_path);
-    auto r = sim.invoke(args, max_cycles);
+    auto r = sim.invoke(args, max_cycles, start_pc);
     std::printf("RESULT cycles=%lu err=%d instr_retired=%u "
                 "r0=%016lx r1=%016lx r2=%016lx r3=%016lx\n",
                 static_cast<unsigned long>(r.cycles),

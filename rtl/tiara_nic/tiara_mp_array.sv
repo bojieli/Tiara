@@ -32,11 +32,12 @@ module tiara_mp_array
     input  logic [63:0]                          load_data,
 
     // Invocation port
-    input  logic                                inv_valid,
-    input  logic [63:0]                         inv_args [0:7],
-    input  logic [TAG_W-1:0]                    inv_tag,
-    output logic                                inv_busy,
-    output logic                                inv_accept,
+    input  logic                                            inv_valid,
+    input  logic [63:0]                                     inv_args [0:7],
+    input  logic [$clog2(INSTR_STORE_DEPTH)-1:0]            inv_start_pc,
+    input  logic [TAG_W-1:0]                                inv_tag,
+    output logic                                            inv_busy,
+    output logic                                            inv_accept,
 
     // Completion port
     output logic                                done,
@@ -49,34 +50,37 @@ module tiara_mp_array
 );
 
   // Per-MP wires
-  logic        mp_start  [0:NUM_MPS-1];
-  logic [63:0] mp_args   [0:NUM_MPS-1][0:7];
-  logic        mp_done   [0:NUM_MPS-1];
-  logic [63:0] mp_result [0:NUM_MPS-1][0:3];
-  logic        mp_err    [0:NUM_MPS-1];
-  logic [31:0] mp_retired[0:NUM_MPS-1];
+  logic                                            mp_start    [0:NUM_MPS-1];
+  logic [$clog2(INSTR_STORE_DEPTH)-1:0]            mp_start_pc [0:NUM_MPS-1];
+  logic [63:0]                                     mp_args     [0:NUM_MPS-1][0:7];
+  logic                                            mp_done     [0:NUM_MPS-1];
+  logic [63:0]                                     mp_result   [0:NUM_MPS-1][0:3];
+  logic                                            mp_err      [0:NUM_MPS-1];
+  logic [31:0]                                     mp_retired  [0:NUM_MPS-1];
 
   // ---- Dispatcher ----
   tiara_dispatcher_n #(
       .NUM_MPS(NUM_MPS),
       .TAG_W  (TAG_W)
   ) u_disp (
-      .clk        (clk),
-      .rst_n      (rst_n),
-      .inv_valid  (inv_valid),
-      .inv_args   (inv_args),
-      .inv_tag    (inv_tag),
-      .inv_busy   (inv_busy),
-      .inv_accept (inv_accept),
-      .done       (done),
-      .done_tag   (done_tag),
-      .done_result(done_result),
-      .done_err   (done_err),
-      .mp_start   (mp_start),
-      .mp_args    (mp_args),
-      .mp_done    (mp_done),
-      .mp_result  (mp_result),
-      .mp_err     (mp_err)
+      .clk          (clk),
+      .rst_n        (rst_n),
+      .inv_valid    (inv_valid),
+      .inv_args     (inv_args),
+      .inv_start_pc (inv_start_pc),
+      .inv_tag      (inv_tag),
+      .inv_busy     (inv_busy),
+      .inv_accept   (inv_accept),
+      .done         (done),
+      .done_tag     (done_tag),
+      .done_result  (done_result),
+      .done_err     (done_err),
+      .mp_start     (mp_start),
+      .mp_start_pc  (mp_start_pc),
+      .mp_args      (mp_args),
+      .mp_done      (mp_done),
+      .mp_result    (mp_result),
+      .mp_err       (mp_err)
   );
 
   // ---- N memory processors, each with private memory subsystem ----
@@ -100,6 +104,7 @@ module tiara_mp_array
           .clk             (clk),
           .rst_n           (rst_n),
           .task_start      (mp_start[gi]),
+          .task_start_pc   (mp_start_pc[gi]),
           .task_args       (mp_args [gi]),
           .task_done       (mp_done [gi]),
           .task_result     (mp_result[gi]),

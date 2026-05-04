@@ -21,19 +21,21 @@ module tiara_dispatcher
     input  logic                  rst_n,
 
     // Host-side invocation port
-    input  logic                  inv_valid,
-    input  logic [63:0]           inv_args [0:7],
-    output logic                  inv_busy,
-    output logic                  done,
-    output logic [63:0]           done_result [0:3],
-    output logic                  done_err,
+    input  logic                                            inv_valid,
+    input  logic [63:0]                                     inv_args [0:7],
+    input  logic [$clog2(INSTR_STORE_DEPTH)-1:0]            inv_start_pc,
+    output logic                                            inv_busy,
+    output logic                                            done,
+    output logic [63:0]                                     done_result [0:3],
+    output logic                                            done_err,
 
     // To/from MP[0]
-    output logic                  mp_start,
-    output logic [63:0]           mp_args [0:7],
-    input  logic                  mp_done,
-    input  logic [63:0]           mp_result [0:3],
-    input  logic                  mp_err
+    output logic                                            mp_start,
+    output logic [$clog2(INSTR_STORE_DEPTH)-1:0]            mp_start_pc,
+    output logic [63:0]                                     mp_args [0:7],
+    input  logic                                            mp_done,
+    input  logic [63:0]                                     mp_result [0:3],
+    input  logic                                            mp_err
 );
 
   typedef enum logic [1:0] {
@@ -46,11 +48,12 @@ module tiara_dispatcher
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      state    <= D_IDLE;
-      mp_start <= 1'b0;
-      done     <= 1'b0;
-      done_err <= 1'b0;
-      inv_busy <= 1'b0;
+      state       <= D_IDLE;
+      mp_start    <= 1'b0;
+      mp_start_pc <= '0;
+      done        <= 1'b0;
+      done_err    <= 1'b0;
+      inv_busy    <= 1'b0;
       for (int i = 0; i < 8; i++) mp_args[i] <= 64'd0;
       for (int i = 0; i < 4; i++) done_result[i] <= 64'd0;
     end else begin
@@ -60,9 +63,10 @@ module tiara_dispatcher
         D_IDLE: begin
           if (inv_valid) begin
             for (int i = 0; i < 8; i++) mp_args[i] <= inv_args[i];
-            mp_start <= 1'b1;
-            inv_busy <= 1'b1;
-            state    <= D_RUN;
+            mp_start    <= 1'b1;
+            mp_start_pc <= inv_start_pc;
+            inv_busy    <= 1'b1;
+            state       <= D_RUN;
           end
         end
         D_RUN: begin
