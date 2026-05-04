@@ -4,10 +4,10 @@ graph_d10_us,8.63
 graph_d10_speedup_vs_rdma,2.896871378910776
 pt_walk_tiara_us,3.7
 pt_walk_speedup_vs_rdma,2.7027027027027026
-lock_1_us,14.77
-lock_16_us,20.39
-paged_8kb_tiara_gbps,26.16
-paged_8kb_speedup_vs_rdma,6.013793103448276
+lock_1_us,4.33
+lock_16_us,9.96
+paged_8kb_tiara_gbps,12.1
+paged_8kb_speedup_vs_rdma,2.781609195402299
 1-MP core (post-route).LUT,27286
 1-MP core (post-route).FF,84733
 1-MP core (post-route).BRAM36,2

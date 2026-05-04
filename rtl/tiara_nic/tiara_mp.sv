@@ -237,7 +237,14 @@ module tiara_mp
       cycles_executed <= cycles_executed + 1'b1;
 
       // Inflight tracking
-      if (mem.cpy_accept && mem.cpy_async) begin
+      // Async MEMCPY in-flight tracking.  cpy_accept can pulse one
+      // cycle after cpy_en (i.e. while the MP is in S_MEM_ASYNC, where
+      // mem.cpy_async has dropped back to 0 by default).  We therefore
+      // use the FSM state as the truth source: any cpy_accept while
+      // we're in S_MEM_ASYNC came from an *async* MEMCPY (sync ones
+      // would have transitioned to S_MEM_WAIT instead).
+      if (mem.cpy_accept && (state == S_MEM_ASYNC ||
+                              (state == S_EXECUTE && mem.cpy_async))) begin
         inflight <= inflight + 1'b1;
       end
       if (mem.cpy_done) begin

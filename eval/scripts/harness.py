@@ -587,6 +587,65 @@ def cmd_crossover(args):
     return 0
 
 
+def cmd_moe(args):
+    """MoE expert weight gather (paper Table 1 row 5; not previously
+    evaluated in the paper)."""
+    tasm = ROOT / "sw" / "operators" / "moe_expert.tasm"
+    _, op_bin = build_operator(tasm)
+
+    EXPERT_SIZE = 8192   # bytes per expert weight slab in the test
+    IDS_BASE       = 0
+    TTABLE_BASE    = 0x1000
+    DST_BASE       = 0x10000
+
+    rows = []
+    for n_exp in args.experts:
+        ids = list(range(n_exp))
+        ttable = [TTABLE_BASE + 0x10000 + i * EXPERT_SIZE
+                  for i in range(max(n_exp, 64))]
+        # Layout the seed words
+        words = {}
+        for i, eid in enumerate(ids):
+            words[(IDS_BASE // 8) + i] = eid
+        for i, addr in enumerate(ttable):
+            words[(TTABLE_BASE // 8) + i] = addr
+        n_words = max(words.keys()) + 1
+        seed_words = [words.get(i, 0) for i in range(n_words)]
+        with tempfile.NamedTemporaryFile(
+                "w", suffix=".hex", delete=False) as f:
+            f.write("\n".join(f"{w:016x}" for w in seed_words) + "\n")
+            seed = Path(f.name)
+        try:
+            r = run_sim(op_bin,
+                        args=[n_exp, IDS_BASE, TTABLE_BASE,
+                              EXPERT_SIZE, DST_BASE, 0, 0, 0],
+                        dma_seed=seed,
+                        cycles=10_000_000)
+        finally:
+            seed.unlink(missing_ok=True)
+        # Analytical baselines:
+        # RDMA: 2 RTTs (read table, then fetch experts) + transfer
+        rdma_us = 2 * Params().rtt_us + (n_exp * EXPERT_SIZE) / 12_100.0
+        # RPC: 1 RTT + dispatch + per-expert CPU resolve + transfer
+        rpc_us  = Params().rtt_us + Params().rpc_dispatch_us + \
+                  0.5 * n_exp + (n_exp * EXPERT_SIZE) / 12_100.0
+        rows.append((n_exp, r.latency_us, rdma_us, rpc_us))
+        print(f"  experts={n_exp:3d}  Tiara={r.latency_us:6.2f} µs  "
+              f"RDMA={rdma_us:6.2f} µs  RPC={rpc_us:6.2f} µs")
+
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with out.open("w") as f:
+            f.write("# MoE expert weight gather latency (µs)\n")
+            f.write("# Tiara measured by RTL; baselines analytical.\n")
+            f.write("# experts Tiara_us  RDMA_us  RPC_us\n")
+            for n, t, rd, rp in rows:
+                f.write(f"{n:<8d}{t:9.2f}{rd:9.2f}{rp:9.2f}\n")
+        print(f"wrote {out}")
+    return 0
+
+
 def cmd_summary(args):
     """Print a summary table to stdout."""
     p = Params()
@@ -632,6 +691,12 @@ def main(argv: List[str] | None = None) -> int:
     co.add_argument("--depth", type=int, default=3)
     co.add_argument("--out", type=Path, default=None)
     co.set_defaults(func=cmd_crossover)
+
+    mo = sub.add_parser("moe", help="MoE expert weight gather (paper Table 1)")
+    mo.add_argument("--experts", type=int, nargs="+",
+                    default=[1, 2, 4, 8, 16, 32])
+    mo.add_argument("--out", type=Path, default=None)
+    mo.set_defaults(func=cmd_moe)
 
     s = sub.add_parser("summary", help="Print analytical-only summary")
     s.set_defaults(func=cmd_summary)

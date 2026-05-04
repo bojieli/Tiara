@@ -3,8 +3,13 @@
 Reference implementation of **Tiara**, a compact, statically verifiable
 instruction set that runs on the memory-side NIC. Tiara collapses
 multi-RTT pointer-chasing access patterns (graph traversal, page-table
-walk, distributed lock + replication, disaggregated PagedAttention)
-into a single round-trip by resolving indirection locally.
+walk, distributed lock + replication, disaggregated PagedAttention,
+MoE expert paging) into a single round-trip by resolving indirection
+locally.
+
+> **First time here?** Read [`docs/TUTORIAL.md`](docs/TUTORIAL.md) — a
+> 30-minute walk from zero to running a real operator. Or jump
+> straight to [`docs/FAQ.md`](docs/FAQ.md) if something looks weird.
 
 This repository is the FPGA-targeted reference implementation referenced
 by the APNet 2026 paper *“Tiara: A Programmable Line-Rate ISA for
@@ -93,12 +98,13 @@ scripts/gen_isa_pkg.py        keeps RTL & Python ISA constants in sync
 
 After `make eval`, the headline numbers go to `reports/SUMMARY.md`:
 
-| Result | Tiara | Baseline | Speedup |
-|---|---|---|---|
-| Graph traversal d=10        | 8.6 µs        | 25.0 µs (RDMA) | **2.9×** |
-| Page-table walk             | 3.7 µs        | 10.0 µs (RDMA) | **2.7×** |
-| PagedAttention 8 KB blocks  | 12.1 GB/s     | 4.4 GB/s (RDMA, batched) | **2.8×** |
-| Distributed lock 16 clients | 20.4 µs       | 31.3 µs (RDMA) | **1.5×** |
+| Result | Tiara | Baseline | Speedup | Paper claim |
+|---|---|---|---|---|
+| Graph traversal d=10        | 8.6 µs        | 25.0 µs (RDMA)        | **2.9×** | 2.5× |
+| Page-table walk             | 3.7 µs        | 10.0 µs (RDMA)        | **2.7×** | 52% lower (~2.1×) |
+| Distributed lock 1 client   | 4.3 µs        | 12.5 µs (RDMA)        | **2.9×** | 2.5× |
+| PagedAttention 8 KB blocks  | 12.1 GB/s     | 4.4 GB/s (RDMA, batch)| **2.8×** | 2.8× |
+| MoE expert gather (32 exp.) | 18.1 µs       | 26.7 µs (RDMA)        | **1.5×** | (paper Table 1, not eval'd in paper) |
 
 | Vivado on U50 (xcu50-fsvh2104-2-e, 200 MHz) | LUT | FF | BRAM | DSP | WNS |
 |---|---:|---:|---:|---:|---:|

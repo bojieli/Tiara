@@ -251,6 +251,28 @@ def plot_paged(plt):
     _save(fig, "paged_attention")
 
 
+def plot_moe(plt):
+    p = RESULTS / "moe.dat"
+    if not p.exists(): return
+    cols = _load_columns(p)
+    if "experts" not in cols: return
+    fig, ax = plt.subplots(figsize=(3.4, 2.3))
+    n = cols["experts"]
+    for label, key, marker, ls in [
+            ("Tiara", "Tiara_us", "o", "-"),
+            ("RDMA",  "RDMA_us",  "s", "-"),
+            ("RPC",   "RPC_us",   "^", "-")]:
+        if key in cols:
+            ax.plot(n, cols[key], marker=marker, linestyle=ls, label=label)
+    ax.set_xscale("log", base=2)
+    ax.set_xticks(n)
+    ax.set_xticklabels([str(int(x)) for x in n])
+    ax.set_xlabel("Experts to gather")
+    ax.set_ylabel("Latency ($\\mu$s)")
+    ax.legend(loc="upper left")
+    _save(fig, "moe_expert")
+
+
 def plot_crossover(plt):
     p = RESULTS / "crossover.dat"
     if not p.exists(): return
@@ -289,6 +311,7 @@ def main() -> int:
     plot_dist_lock(plt)
     plot_paged(plt)
     plot_crossover(plt)
+    plot_moe(plt)
     return 0
 
 
