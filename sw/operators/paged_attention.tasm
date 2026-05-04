@@ -25,16 +25,16 @@
   ADDI r6, r4, 0
   LI   r7, 0
 
-  // Pipelined loop: every iteration loads a block-table entry, then
-  // issues an async MEMCPY to fetch that block into r6.
-  // Body length = 6 instructions (LOAD, MEMCPY, ADDI x3, ADDI for r7).
+  // Pipelined loop: every iteration loads a block-table entry, masks
+  // the loaded physical address into the client_recv region's offset
+  // window (paper §3.3), then issues an async MEMCPY for that block.
   LOOP r2, body_end
-  LOAD   r8, [r5 + 0]              // r8 = physical address of block
+  LOAD   r8, [r5 + 0]              // r8 = physical address of block (opaque)
+  ANDI   r8, r8, 0x7FFFFFF8        // clamp into client_recv region 0
   MEMCPY r9, r6, r8, ASYNC, LEN_REG=r3
   ADDI   r5, r5, 8                 // advance block-table pointer
   ADD    r6, r6, r3                // advance dst pointer
   ADDI   r7, r7, 1                 // increment block counter
-  ADDI   r0, r0, 0                 // padding nop (r0 writes drop)
 body_end:
 
   // Drain all in-flight async transfers before returning.

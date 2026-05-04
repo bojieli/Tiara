@@ -25,12 +25,16 @@ bounds = [0, 0xFFFFFFFFFFFFFFFF]
 [[arguments]]
 name   = "rep1"
 reg    = 4
-bounds = [0, 0xFFFFFFFFFFFFFFFF]
+bounds = [0x0001000000000000, 0x0001000000000FF8]   # device 1, region 0
+device = 1
+region = 0
 
 [[arguments]]
 name   = "rep2"
 reg    = 5
-bounds = [0, 0xFFFFFFFFFFFFFFFF]
+bounds = [0x0002000000000000, 0x0002000000000FF8]   # device 2, region 0
+device = 2
+region = 0
 
 [[arguments]]
 name   = "retries"
@@ -41,4 +45,16 @@ bounds = [0, 64]
 id     = 0
 device = 0
 name   = "lock_state"
+size   = 0x100000
+
+[[regions]]
+id     = 0
+device = 1
+name   = "replica1"
+size   = 0x100000
+
+[[regions]]
+id     = 0
+device = 2
+name   = "replica2"
 size   = 0x100000

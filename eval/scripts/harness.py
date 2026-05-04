@@ -380,9 +380,9 @@ def cmd_page_table_walk(args):
 
 def _emit_paged_attention_tasm(block_size: int) -> str:
     """Emit a PagedAttention operator with the block size baked into the
-    immediate field of the MEMCPY (the RTL's LEN_FROM_REG path is left
-    for future work; constant block sizes are sufficient to characterise
-    per-block overhead, which is the metric the paper reports)."""
+    immediate field of the MEMCPY.  An ANDI after the block-table LOAD
+    masks the loaded address into the client_recv region's offset
+    window so the verifier accepts the MEMCPY src per paper §3.3."""
     return f"""\
   .arg btbase  r1
   .arg nblock  r2
@@ -393,6 +393,7 @@ def _emit_paged_attention_tasm(block_size: int) -> str:
 
   LOOP r2, body_end
   LOAD   r8, [r5 + 0]
+  ANDI   r8, r8, 0x7FFFFFF8
   MEMCPY r9, r6, r8, ASYNC, LEN={block_size}
   ADDI   r5, r5, 8
   ADDI   r6, r6, {block_size}

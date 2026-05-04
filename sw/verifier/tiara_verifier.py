@@ -363,23 +363,64 @@ def _check_addr_reg(report: VerifyReport,
                     region_set: Dict[Tuple[int, int], Region],
                     pc: int,
                     kind: str) -> None:
+    """Per paper §3.3, every memory address must be provably inside a
+    declared region.  Three cases:
+
+    1. The register has a known region tag (from manifest or
+       ADD-with-base): check the AbsVal's [lo, hi] range against the
+       region's base + size.
+    2. The register is bounded but region-less (post-ANDI of an
+       opaque value): search for any declared region whose
+       [base, base+size) range contains [lo, hi].  If found, accept
+       with a note ("matched implicit region <name>"); the runtime
+       region check still fires.
+    3. Opaque (post-LOAD with no intervening ANDI): REJECT.  The
+       operator must mask the loaded value before reusing it as an
+       address.
+    """
     av = abs_state.get(reg, AbsVal.top())
-    if av.opaque or av.region is None:
-        # Opaque values are only legal as addresses if the operator has
-        # masked them down.  We accept them with a soft warning; runtime
-        # bounds checking in the RTL still applies.
-        report.issues.append(
-            f"pc {pc:#x}: {kind} via r{reg} is opaque; "
-            f"runtime region check required")
+    if av.opaque:
+        report.fail(
+            f"pc {pc:#x}: {kind} via r{reg} is opaque (post-LOAD).  "
+            f"Insert `ANDI r{reg}, r{reg}, MASK` to clamp into a "
+            f"declared region's offset window before using as address."
+        )
         return
-    region = region_set.get(av.region)
-    if region is None:
-        report.fail(f"pc {pc:#x}: {kind} targets undeclared region "
-                    f"{av.region}")
+
+    # Effective absolute base of a region in the unified address space:
+    #   addr = (device << 48) | (region_id << 32) | offset
+    def _abs_base(r: Region) -> int:
+        return (r.device << 48) | (r.id << 32) | r.base
+
+    if av.region is not None:
+        region = region_set.get(av.region)
+        if region is None:
+            report.fail(
+                f"pc {pc:#x}: {kind} targets undeclared region {av.region}")
+            return
+        ab = _abs_base(region)
+        if av.lo < ab or av.hi > ab + region.size:
+            report.fail(
+                f"pc {pc:#x}: {kind} addr range [{av.lo:#x},{av.hi:#x}] "
+                f"escapes region {region.name} "
+                f"[{ab:#x},{ab+region.size:#x})")
         return
-    if av.lo < region.base or av.hi > region.base + region.size:
-        report.fail(f"pc {pc:#x}: {kind} addr range [{av.lo:#x},{av.hi:#x}] "
-                    f"escapes region {region.name}")
+
+    # Case 2: bounded but no explicit region tag.  Find the smallest
+    # declared region containing [av.lo, av.hi].
+    candidates = [
+        r for r in region_set.values()
+        if av.lo >= _abs_base(r) and av.hi <= _abs_base(r) + r.size
+    ]
+    if not candidates:
+        report.fail(
+            f"pc {pc:#x}: {kind} via r{reg} masked range "
+            f"[{av.lo:#x},{av.hi:#x}] does not fit in any declared region")
+        return
+    chosen = min(candidates, key=lambda r: r.size)
+    report.issues.append(
+        f"pc {pc:#x}: {kind} via r{reg} matched implicit region "
+        f"{chosen.name} (range [{av.lo:#x},{av.hi:#x}])")
 
 
 def _abs_compute(sub: int, a: AbsVal, b: AbsVal, imm: int) -> AbsVal:

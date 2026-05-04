@@ -32,10 +32,12 @@
   LI   r8, 0          // r8 = experts fetched
 
   LOOP r1, body_end
-  LOAD r9,  [r6 + 0]                  // expert id
+  LOAD r9,  [r6 + 0]                  // expert id (opaque, but bounded:)
+  ANDI r9,  r9,  0x3F                 // mask to 6 bits (≤64 experts)
   SHLI r9,  r9,  3                    // *= 8 (table entry size)
   ADD  r10, r3,  r9                   // r10 = &ttable[id]
   LOAD r10, [r10 + 0]                 // r10 = phys addr of expert weights
+  ANDI r10, r10, 0x7FFFFFF8           // clamp into moe_pool region 0
   MEMCPY r11, r7, r10, ASYNC, LEN=8192
   ADDI r6, r6, 8                      // advance id pointer
   ADD  r7, r7, r4                     // advance dst pointer

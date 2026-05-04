@@ -18,7 +18,7 @@ region = 0
 [[arguments]]
 name   = "ttable"
 reg    = 3
-bounds = [0, 0x7FFFFFF8]
+bounds = [0, 0x7FFFFE00]      # leave 0x200 bytes headroom for indexing
 device = 0
 region = 0
 

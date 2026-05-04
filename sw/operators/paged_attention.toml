@@ -6,9 +6,9 @@ max_dynamic = 131072
 [[arguments]]
 name   = "btbase"
 reg    = 1
-bounds = [0, 0x7FFFFFF8]
+bounds = [0, 0x70000000]
 device = 0
-region = 1
+region = 0
 
 [[arguments]]
 name   = "nblock"
@@ -23,18 +23,12 @@ bounds = [0, 0x100000]
 [[arguments]]
 name   = "dst"
 reg    = 4
-bounds = [0, 0x7FFFFFF8]
+bounds = [0, 0x70000000]
 device = 0
 region = 0
 
 [[regions]]
 id     = 0
 device = 0
-name   = "client_recv_buffer"
-size   = 0x80000000
-
-[[regions]]
-id     = 1
-device = 0
-name   = "block_table"
+name   = "host_dram"
 size   = 0x80000000

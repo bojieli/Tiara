@@ -1,11 +1,11 @@
 metric,value
-graph_d1_us,1.66
-graph_d10_us,8.63
-graph_d10_speedup_vs_rdma,2.896871378910776
-pt_walk_tiara_us,3.7
-pt_walk_speedup_vs_rdma,2.7027027027027026
-lock_1_us,4.33
-lock_16_us,9.96
+graph_d1_us,1.67
+graph_d10_us,8.78
+graph_d10_speedup_vs_rdma,2.847380410022779
+pt_walk_tiara_us,3.75
+pt_walk_speedup_vs_rdma,2.6666666666666665
+lock_1_us,4.34
+lock_16_us,9.97
 paged_8kb_tiara_gbps,12.1
 paged_8kb_speedup_vs_rdma,2.781609195402299
 1-MP core (post-route).LUT,27286
