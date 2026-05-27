@@ -293,21 +293,26 @@ def cmd_graph_traversal(args):
                         f"{baseline_prism_graph(d,p):8.2f}\n")
         print(f"wrote {out}")
 
-        # Throughput companion file (Mops, saturated, 8 MPs)
+        # Throughput companion file (Mops, saturated, 8 MPs).
+        # RPC sweep: 16 cores (CPU-bound, paper baseline) and 22 cores
+        # (eRPC's measured saturation point on 25 GbE, extrapolated to
+        # 100 GbE NIC).
         tput = out.with_name("graph_traversal_tput.dat")
         with tput.open("w") as f:
             f.write("# Graph traversal throughput (Mops, saturated, 8 MPs)\n")
-            f.write("# depth Tiara_RTL  RDMA   RPC    RedN   PRISM\n")
+            f.write("# RPC@16 = paper baseline; RPC@22 = eRPC saturation point\n")
+            f.write("# depth Tiara_RTL  RDMA   RPC    RPC22  RedN   PRISM\n")
             p = Params()
             for d, lat, _, _ in results:
                 t_tiara = throughput_mops(lat, num_mps=NUM_MPS,
                                           concurrency_per_mp=12.0)  # 96 task slots / 8 MPs
                 t_rdma  = min(65.0, throughput_mops(baseline_rdma_graph(d,p), 1, 65.0))
                 t_rpc   = throughput_mops(baseline_rpc_graph(d,p), 16, 1.0)
+                t_rpc22 = throughput_mops(baseline_rpc_graph(d,p), 22, 1.0)
                 t_redn  = min(1.0, throughput_mops(baseline_redn_graph(d,p), 8, 1.0))
                 t_prism = min(50.0, throughput_mops(baseline_prism_graph(d,p), 1, 50.0))
                 f.write(f"{d:<6d}{t_tiara:8.2f}{t_rdma:8.2f}{t_rpc:8.2f}"
-                        f"{t_redn:8.2f}{t_prism:8.2f}\n")
+                        f"{t_rpc22:8.2f}{t_redn:8.2f}{t_prism:8.2f}\n")
         print(f"wrote {tput}")
     return 0
 
