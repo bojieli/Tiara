@@ -61,7 +61,7 @@ fpga_methodology_drc_routed.rpt      methodology checks
 ## How to reproduce
 
 ```bash
-source /home/ubuntu/Xilinx/2025.2/Vivado/settings64.sh
+source /tools/Xilinx/2025.2/Vivado/settings64.sh
 cd Tiara
 make bitstream                       # ~40 min on a 32-core box
 ls hw/build/fpga.bit                 # the result

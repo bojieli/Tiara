@@ -58,13 +58,13 @@ JTAG (USB cable to the U50 management connector):
 
 ```bash
 cd hw/build
-vivado -mode batch -source /home/ubuntu/Tiara/tcl/program.tcl
+vivado -mode batch -source tcl/program.tcl
 ```
 
 Or flash for boot-time loading:
 
 ```bash
-vivado -mode batch -source /home/ubuntu/Tiara/tcl/flash.tcl
+vivado -mode batch -source tcl/flash.tcl
 sudo reboot       # so the U50 reloads from flash
 ```
 

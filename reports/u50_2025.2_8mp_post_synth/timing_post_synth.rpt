@@ -3,7 +3,7 @@ Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanc
 | Tool Version      : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
 | Date              : Sun May  3 16:29:30 2026
 | Host              : ubuntu running 64-bit Ubuntu 22.04.5 LTS
-| Command           : report_timing_summary -file /home/ubuntu/Tiara/synth_8mp/timing_post_synth.rpt -warn_on_violation
+| Command           : report_timing_summary -file synth_8mp/timing_post_synth.rpt -warn_on_violation
 | Design            : tiara_synth_top_n
 | Device            : xcu50-fsvh2104
 | Speed File        : -2  PRODUCTION 1.30 05-01-2022

@@ -2031,63 +2031,63 @@ XDCH-2#1 Warning
 Same min and max delay values on IO port  
 The same input delay of 0.000 ns has been defined on port 'msp_gpio[0]' for both max and min. Make sure this reflects the design intent.
 set_input_delay 0.000 [get_ports {{msp_gpio[*]} msp_uart_rxd}]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 61)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 61)
 Related violations: <none>
 
 XDCH-2#2 Warning
 Same min and max delay values on IO port  
 The same input delay of 0.000 ns has been defined on port 'msp_gpio[1]' for both max and min. Make sure this reflects the design intent.
 set_input_delay 0.000 [get_ports {{msp_gpio[*]} msp_uart_rxd}]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 61)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 61)
 Related violations: <none>
 
 XDCH-2#3 Warning
 Same min and max delay values on IO port  
 The same input delay of 0.000 ns has been defined on port 'msp_uart_rxd' for both max and min. Make sure this reflects the design intent.
 set_input_delay 0.000 [get_ports {{msp_gpio[*]} msp_uart_rxd}]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 61)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 61)
 Related violations: <none>
 
 XDCH-2#4 Warning
 Same min and max delay values on IO port  
 The same input delay of 0.000 ns has been defined on port 'pcie_reset_n' for both max and min. Make sure this reflects the design intent.
 set_input_delay 0.000 [get_ports pcie_reset_n]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 204)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 204)
 Related violations: <none>
 
 XDCH-2#5 Warning
 Same min and max delay values on IO port  
 The same output delay of 0.000 ns has been defined on port 'hbm_cattrip' for both max and min. Make sure this reflects the design intent.
 set_output_delay 0.000 [get_ports hbm_cattrip]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 67)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 67)
 Related violations: <none>
 
 XDCH-2#6 Warning
 Same min and max delay values on IO port  
 The same output delay of 0.000 ns has been defined on port 'msp_uart_txd' for both max and min. Make sure this reflects the design intent.
 set_output_delay 0.000 [get_ports msp_uart_txd]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 59)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 59)
 Related violations: <none>
 
 XDCH-2#7 Warning
 Same min and max delay values on IO port  
 The same output delay of 0.000 ns has been defined on port 'qsfp_led_act' for both max and min. Make sure this reflects the design intent.
 set_output_delay 0.000 [get_ports {qsfp_led_act qsfp_led_stat_g qsfp_led_stat_y}]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 37)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 37)
 Related violations: <none>
 
 XDCH-2#8 Warning
 Same min and max delay values on IO port  
 The same output delay of 0.000 ns has been defined on port 'qsfp_led_stat_g' for both max and min. Make sure this reflects the design intent.
 set_output_delay 0.000 [get_ports {qsfp_led_act qsfp_led_stat_g qsfp_led_stat_y}]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 37)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 37)
 Related violations: <none>
 
 XDCH-2#9 Warning
 Same min and max delay values on IO port  
 The same output delay of 0.000 ns has been defined on port 'qsfp_led_stat_y' for both max and min. Make sure this reflects the design intent.
 set_output_delay 0.000 [get_ports {qsfp_led_act qsfp_led_stat_g qsfp_led_stat_y}]
-/home/ubuntu/Tiara/vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 37)
+vendor/corundum/fpga/mqnic/Alveo/fpga_25g/fpga_au50.xdc (Line: 37)
 Related violations: <none>
 
 CLKC-56#1 Advisory
