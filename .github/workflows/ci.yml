@@ -6,7 +6,8 @@ on:
   pull_request:
 
 jobs:
-  test:
+  rtl-sim:
+    name: RTL + simulator + Python toolchain
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -15,7 +16,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y verilator iverilog python3-numpy \
-                                  python3-matplotlib build-essential
+                                  python3-matplotlib python3-pycparser \
+                                  build-essential
 
       - name: Generate ISA package
         run: make docs
@@ -72,3 +74,27 @@ jobs:
             eval/figures/
             reports/SUMMARY.md
             reports/SUMMARY.csv
+
+  web:
+    name: Web companion (engine + UI tests)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test suite (engine fidelity, verifier, compiler, UI)
+        run: npm test
+
+      - name: Type-check + production build
+        run: npm run build
