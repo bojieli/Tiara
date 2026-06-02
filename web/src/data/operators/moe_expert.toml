@@ -1,0 +1,41 @@
+[operator]
+name        = "moe_expert"
+version     = 1
+max_dynamic = 4096
+
+[[arguments]]
+name   = "n_exp"
+reg    = 1
+bounds = [0, 64]
+
+[[arguments]]
+name   = "ids"
+reg    = 2
+bounds = [0, 0x7FFFFFF8]
+device = 0
+region = 0
+
+[[arguments]]
+name   = "ttable"
+reg    = 3
+bounds = [0, 0x7FFFFE00]      # leave 0x200 bytes headroom for indexing
+device = 0
+region = 0
+
+[[arguments]]
+name   = "ex_size"
+reg    = 4
+bounds = [0, 0x100000]
+
+[[arguments]]
+name   = "dst"
+reg    = 5
+bounds = [0, 0x7FFFFFF8]
+device = 0
+region = 0
+
+[[regions]]
+id     = 0
+device = 0
+name   = "moe_pool"
+size   = 0x80000000

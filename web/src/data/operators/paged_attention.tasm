@@ -1,0 +1,45 @@
+// paged_attention.tasm — disaggregated PagedAttention block gather.
+//
+// Resolves a Block Table on the memory-side NIC and pipelines async
+// reads of all blocks to the client's recv buffer.
+//
+// Args (r1..r8):
+//   r1 = block_table_base (offset into device 0 / region 1)
+//   r2 = num_blocks       (number of logical block IDs to resolve)
+//   r3 = block_size_bytes (e.g. 4096, 8192)
+//   r4 = dst_base         (client recv buffer base; offset into region 0)
+//
+// Returns:
+//   r1 = 0 on success
+//   r2 = number of blocks actually fetched
+
+  .arg btbase  r1
+  .arg nblock  r2
+  .arg bsize   r3
+  .arg dst     r4
+
+  // r5 = current block-table entry pointer
+  // r6 = current dst offset
+  // r7 = block index
+  ADDI r5, r1, 0
+  ADDI r6, r4, 0
+  LI   r7, 0
+
+  // Pipelined loop: every iteration loads a block-table entry, masks
+  // the loaded physical address into the client_recv region's offset
+  // window (paper §3.3), then issues an async MEMCPY for that block.
+  LOOP r2, body_end
+  LOAD   r8, [r5 + 0]              // r8 = physical address of block (opaque)
+  ANDI   r8, r8, 0x7FFFFFF8        // clamp into client_recv region 0
+  MEMCPY r9, r6, r8, ASYNC, LEN_REG=r3
+  ADDI   r5, r5, 8                 // advance block-table pointer
+  ADD    r6, r6, r3                // advance dst pointer
+  ADDI   r7, r7, 1                 // increment block counter
+body_end:
+
+  // Drain all in-flight async transfers before returning.
+  WAIT 0
+
+  LI   r1, 0
+  ADDI r2, r7, 0
+  RET  r1

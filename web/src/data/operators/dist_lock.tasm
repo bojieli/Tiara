@@ -1,0 +1,53 @@
+// dist_lock.tasm — distributed lock acquisition with replication.
+//
+// Mirrors Figure 5 of the paper: CAS-acquire latch, update local state,
+// async-replicate to two replicas, wait for ACKs, then release.
+//
+// Args (r1..r8):
+//   r1 = latch addr (local, device 0)
+//   r2 = state addr (local, device 0)
+//   r3 = newVal     (value to write into state)
+//   r4 = replica1 addr (unified)
+//   r5 = replica2 addr (unified)
+//
+// Returns:
+//   r1 = 0 if acquired, 0xDEAD if already held
+//   r2 = old state value (only valid when r1 == 0)
+//
+// Per paper §3, retry-on-contention is performed by the *client*
+// (host CPU) rather than inside the operator — the operator does at
+// most one CAS per invocation.
+
+  .arg latch    r1
+  .arg state    r2
+  .arg newVal   r3
+  .arg rep1     r4
+  .arg rep2     r5
+
+  // ---- Single CAS attempt ---------------------------------------
+  LI   r7, 0                   // expected = unlocked
+  LI   r8, 1                   // new      = locked
+  CAS  r9, r1, r7, r8          // r9 = previous latch value
+  LI   r11, 0
+  EQ   r10, r9, r11            // r10 = (r9 == 0) ? 1 : 0
+  JUMP r10, acquired
+
+  // ---- Lock was already held: signal failure --------------------
+  LI   r1, 0xDEAD
+  RET  r1
+
+acquired:
+  // ---- Critical section + 2-replica replication ----------------
+  // Use r12 for the old value so r2 (state addr) is preserved.
+  LOAD  r12, [r2 + 0]          // r12 = old state value
+  STORE [r2 + 0], r3           // write new value to state
+
+  MEMCPY r13, r4, r2, ASYNC, LEN=8   // replicate state -> replica 1
+  MEMCPY r14, r5, r2, ASYNC, LEN=8   // replicate state -> replica 2
+  WAIT 0                              // both ACKs
+
+  LI    r7, 0
+  STORE [r1 + 0], r7                  // release latch
+  LI    r1, 0                         // success
+  ADDI  r2, r12, 0                    // return old state value in r2
+  RET   r1

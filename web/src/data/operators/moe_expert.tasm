@@ -1,0 +1,50 @@
+// moe_expert.tasm — MoE expert weight gather (paper Table 1 row 5).
+//
+// Disaggregated mixture-of-experts inference: the gating network
+// produces an expert ID, which must be translated through a small
+// translation table to find the expert's physical address in remote
+// memory.  Then the expert's weights are gathered.
+//
+// Same indirection pattern as PagedAttention's block-table walk, but
+// for fewer / larger blocks (one per expert).  Single round-trip with
+// Tiara; without Tiara the host sees one RTT to read the table and a
+// second to fetch the weights.
+//
+// Args (r1..r8):
+//   r1 = expert_id_count           (number of experts to gate-select)
+//   r2 = ids_base                  (start of expert-id list, host DRAM)
+//   r3 = trans_table_base          (expert id -> phys addr)
+//   r4 = expert_size_bytes         (e.g. 1 MB per expert weight slab)
+//   r5 = dst_base                  (where to gather weights)
+//
+// Returns:
+//   r1 = 0 on success
+//   r2 = experts fetched
+
+  .arg n_exp     r1
+  .arg ids       r2
+  .arg ttable    r3
+  .arg ex_size   r4
+  .arg dst       r5
+
+  ADDI r6, r2, 0      // r6 = current id pointer
+  ADDI r7, r5, 0      // r7 = current dst pointer
+  LI   r8, 0          // r8 = experts fetched
+
+  LOOP r1, body_end
+  LOAD r9,  [r6 + 0]                  // expert id (opaque, but bounded:)
+  ANDI r9,  r9,  0x3F                 // mask to 6 bits (≤64 experts)
+  SHLI r9,  r9,  3                    // *= 8 (table entry size)
+  ADD  r10, r3,  r9                   // r10 = &ttable[id]
+  LOAD r10, [r10 + 0]                 // r10 = phys addr of expert weights
+  ANDI r10, r10, 0x7FFFFFF8           // clamp into moe_pool region 0
+  MEMCPY r11, r7, r10, ASYNC, LEN=8192
+  ADDI r6, r6, 8                      // advance id pointer
+  ADD  r7, r7, r4                     // advance dst pointer
+  ADDI r8, r8, 1
+body_end:
+
+  WAIT 0
+  LI   r1, 0
+  ADDI r2, r8, 0
+  RET  r1

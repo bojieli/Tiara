@@ -1,0 +1,7 @@
+# Distributed lock latency (µs) vs contention
+# clients Tiara  RDMA   RPC    RedN
+1           4.34   12.50    5.00    6.90
+2           4.72   13.75    5.08    8.70
+4           5.47   16.25    5.22   12.30
+8           6.97   21.25    5.53   19.50
+16          9.97   31.25    6.12   33.90

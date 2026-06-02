@@ -1,0 +1,10 @@
+# PagedAttention throughput vs block size
+# Tiara measured by RTL (capped at 100 GbE line rate);
+# baselines analytical.
+# block_bytes Tiara_us Tiara_GBps RDMA_us RDMA_GBps RPC_us  RPC_GBps  RedN_us RedN_GBps
+1024          6964.1    1.20   10528.7    0.80    4793.3    1.75    9707.0    0.86
+4096           961.6    8.72    3155.9    2.66    1721.3    4.87    2948.6    2.84
+8192           449.5   12.10    1927.1    4.35    1209.3    6.94    1822.2    4.60
+16384          244.9   12.10    1312.7    6.39     953.3    8.80    1259.0    6.66
+65536          126.4   12.10     851.9    9.85     761.3   11.02     836.6   10.03
+262144          57.0   12.10     736.7   11.39     713.3   11.76     731.0   11.48

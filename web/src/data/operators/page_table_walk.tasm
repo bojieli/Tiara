@@ -1,0 +1,50 @@
+// page_table_walk.tasm — 3-level page-table walk in a single round-trip.
+//
+// Args (r1..r8):
+//   r1 = virtAddr   (44-bit virtual address)
+//   r2 = l1_base    (offset of level-1 table in device 0)
+//   r3 = data_dst   (where to copy the resolved 4 KiB page)
+//
+// Layout per entry: 8-byte pointer (next-table base, or PFN at level 3).
+// Index extraction: 9 bits per level (matches a 4 KiB page, 512-entry tables).
+//
+// Each chained `LOAD r5, ...` produces an opaque value used as the
+// next-level base.  The ANDI immediately after each LOAD masks into
+// region 1 (page_tables, size 0x20000000) so the verifier can prove
+// the next access stays in-region (paper §3.3).
+//
+// On exit: r1 = physical address; the page contents have been copied
+// to r3 via Memcpy (1 page worth = 4096 bytes).
+
+  .arg vaddr   r1
+  .arg l1      r2
+  .arg dst     r3
+
+  // L1 index = (vaddr >> 30) & 0x1FF
+  SHRI r4, r1, 30
+  ANDI r4, r4, 0x1FF
+  SHLI r4, r4, 3              // *= 8 bytes per entry
+  ADD  r5, r2, r4              // r5 = &L1[index]
+  LOAD r5, [r5 + 0]            // r5 = L2 base (opaque)
+  ANDI r5, r5, 0x1FFFFFF8      // clamp into page_tables region
+
+  // L2 index
+  SHRI r4, r1, 21
+  ANDI r4, r4, 0x1FF
+  SHLI r4, r4, 3
+  ADD  r5, r5, r4
+  LOAD r5, [r5 + 0]            // r5 = L3 base
+  ANDI r5, r5, 0x1FFFFFF8
+
+  // L3 index
+  SHRI r4, r1, 12
+  ANDI r4, r4, 0x1FF
+  SHLI r4, r4, 3
+  ADD  r5, r5, r4
+  LOAD r5, [r5 + 0]            // r5 = physical address (PFN | 0)
+  ANDI r5, r5, 0x7FFFF000      // physical addr in client_recv region (0)
+
+  // Stash physical address as return value, then copy the data page.
+  ADDI r1, r5, 0               // r1 = physical address (returned)
+  MEMCPY r2, r3, r5, LEN=4096  // r2 = status; dst=r3, src=r5, length=4096
+  RET  r1

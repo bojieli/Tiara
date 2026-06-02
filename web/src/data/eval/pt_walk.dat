@@ -1,0 +1,5 @@
+# Page-table walk: latency (µs) + throughput (Mops, sat, 8 MPs)
+# system  latency_us  throughput_Mops
+Tiara      3.75     25.63
+RDMA      10.00      0.10
+RPC        4.51      1.77

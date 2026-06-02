@@ -1,0 +1,34 @@
+[operator]
+name        = "paged_attention"
+version     = 1
+max_dynamic = 131072
+
+[[arguments]]
+name   = "btbase"
+reg    = 1
+bounds = [0, 0x70000000]
+device = 0
+region = 0
+
+[[arguments]]
+name   = "nblock"
+reg    = 2
+bounds = [0, 16384]
+
+[[arguments]]
+name   = "bsize"
+reg    = 3
+bounds = [0, 0x100000]
+
+[[arguments]]
+name   = "dst"
+reg    = 4
+bounds = [0, 0x70000000]
+device = 0
+region = 0
+
+[[regions]]
+id     = 0
+device = 0
+name   = "host_dram"
+size   = 0x80000000
