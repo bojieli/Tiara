@@ -10,6 +10,11 @@ locally.
 > **First time here?** Read [`docs/TUTORIAL.md`](docs/TUTORIAL.md) — a
 > 30-minute walk from zero to running a real operator. Or jump
 > straight to [`docs/FAQ.md`](docs/FAQ.md) if something looks weird.
+>
+> **Prefer to click?** [`web/`](web/) is an interactive companion site
+> that runs the whole toolchain (assembler, restricted-C compiler,
+> static verifier, single-stepping simulator) in the browser, plus an
+> interactive evaluation explorer. `cd web && npm install && npm run dev`.
 
 This repository is the FPGA-targeted reference implementation referenced
 by the APNet 2026 paper *“Tiara: A Programmable Line-Rate ISA for

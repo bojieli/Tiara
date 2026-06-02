@@ -12,7 +12,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-TIARA = Path("/home/ubuntu/Tiara")
+# Repo root: this script lives at <repo>/web/scripts/gen_golden.py
+TIARA = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(TIARA / "sw" / "asm"))
 from tiara_asm import assemble, assemble_file  # noqa: E402
 
