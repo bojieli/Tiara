@@ -57,3 +57,13 @@ synth_8mp/
 *.dcp
 reports/u50_2025.2_full_bitstream/fpga_timing_summary_routed.rpt
 sim/verilator/build_xdma/
+
+# 322 MHz timing-closure experiment: keep tcl + reports, not checkpoints/logs
+synth_322/*.dcp
+synth_322/*.jou
+synth_322/*.log
+synth_322_fp/*.dcp
+synth_322_fp/*.jou
+synth_322_fp/*.log
+synth_322_stdout.log
+synth_322_fp_stdout.log

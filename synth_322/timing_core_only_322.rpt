@@ -1,0 +1,764 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version      : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
+| Date              : Fri Jun  5 12:29:26 2026
+| Host              : ubuntu running 64-bit Ubuntu 22.04.5 LTS
+| Command           : report_timing -from [get_cells -hierarchical -filter {NAME =~ *u_mp/* || NAME =~ *u_disp/*}] -to [get_cells -hierarchical -filter {NAME =~ *u_mp/* || NAME =~ *u_disp/*}] -max_paths 10 -nworst 10 -file /home/ubuntu/Tiara/synth_322/timing_core_only_322.rpt
+| Design            : tiara_synth_top
+| Device            : xcu50-fsvh2104
+| Speed File        : -2  PRODUCTION 1.30 05-01-2022
+| Design State      : Routed
+| Temperature Grade : E
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (VIOLATED) :        -1.051ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[2][40]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.135ns  (logic 0.792ns (19.156%)  route 3.343ns (80.844%))
+  Logic Levels:           9  (LUT5=2 LUT6=6 MUXF7=1)
+  Clock Path Skew:        -0.009ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.021ns = ( 3.124 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 r  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.863     0.972    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X43Y315        LUT5 (Prop_A6LUT_SLICEL_I3_O)
+                                                      0.050     1.022 r  u_mp/u_rf/mul_a[59]_i_5/O
+                         net (fo=1, routed)           0.157     1.179    u_mp/u_rf/mul_a[59]_i_5_n_0
+    SLICE_X43Y316        LUT6 (Prop_G6LUT_SLICEL_I5_O)
+                                                      0.123     1.302 r  u_mp/u_rf/mul_a[59]_i_1/O
+                         net (fo=36, routed)          0.557     1.859    u_mp/u_rf/rf_ra[59]
+    SLICE_X52Y326        LUT6 (Prop_H6LUT_SLICEM_I2_O)
+                                                      0.101     1.960 r  u_mp/u_rf/regs[1][43]_i_23/O
+                         net (fo=3, routed)           0.250     2.210    u_mp/u_rf/regs[1][43]_i_23_n_0
+    SLICE_X54Y323        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.051     2.261 r  u_mp/u_rf/regs[1][41]_i_19/O
+                         net (fo=2, routed)           0.135     2.396    u_mp/u_rf/regs[1][41]_i_19_n_0
+    SLICE_X53Y322        LUT5 (Prop_F6LUT_SLICEM_I2_O)
+                                                      0.088     2.484 r  u_mp/u_rf/regs[1][40]_i_14/O
+                         net (fo=1, routed)           0.394     2.878    u_mp/u_rf/regs[1][40]_i_14_n_0
+    SLICE_X59Y322        LUT6 (Prop_C6LUT_SLICEL_I0_O)
+                                                      0.050     2.928 r  u_mp/u_rf/regs[1][40]_i_8/O
+                         net (fo=2, routed)           0.010     2.938    u_mp/u_rf/regs[1][40]_i_8_n_0
+    SLICE_X59Y322        MUXF7 (Prop_F7MUX_CD_SLICEL_I1_O)
+                                                      0.064     3.002 r  u_mp/u_rf/regs_reg[1][40]_i_12/O
+                         net (fo=1, routed)           0.212     3.214    u_mp/u_rf/regs_reg[1][40]_i_12_n_0
+    SLICE_X62Y322        LUT6 (Prop_H6LUT_SLICEL_I5_O)
+                                                      0.150     3.364 r  u_mp/u_rf/regs[1][40]_i_4/O
+                         net (fo=1, routed)           0.156     3.520    u_mp/u_rf/regs[1][40]_i_4_n_0
+    SLICE_X62Y316        LUT6 (Prop_H6LUT_SLICEL_I4_O)
+                                                      0.036     3.556 r  u_mp/u_rf/regs[1][40]_i_1/O
+                         net (fo=15, routed)          0.608     4.165    u_mp/u_rf/regs[40]
+    SLICE_X61Y315        FDCE                                         r  u_mp/u_rf/regs_reg[2][40]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.021     3.124    u_mp/u_rf/clk
+    SLICE_X61Y315        FDCE                                         r  u_mp/u_rf/regs_reg[2][40]/C
+                         clock pessimism              0.000     3.124    
+                         clock uncertainty           -0.035     3.089    
+    SLICE_X61Y315        FDCE (Setup_FFF_SLICEM_C_D)
+                                                      0.025     3.114    u_mp/u_rf/regs_reg[2][40]
+  -------------------------------------------------------------------
+                         required time                          3.114    
+                         arrival time                          -4.165    
+  -------------------------------------------------------------------
+                         slack                                 -1.051    
+
+Slack (VIOLATED) :        -1.051ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[2][40]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.135ns  (logic 0.792ns (19.156%)  route 3.343ns (80.844%))
+  Logic Levels:           9  (LUT5=2 LUT6=6 MUXF7=1)
+  Clock Path Skew:        -0.009ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.021ns = ( 3.124 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 f  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.863     0.972    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X43Y315        LUT5 (Prop_A6LUT_SLICEL_I3_O)
+                                                      0.050     1.022 r  u_mp/u_rf/mul_a[59]_i_5/O
+                         net (fo=1, routed)           0.157     1.179    u_mp/u_rf/mul_a[59]_i_5_n_0
+    SLICE_X43Y316        LUT6 (Prop_G6LUT_SLICEL_I5_O)
+                                                      0.123     1.302 r  u_mp/u_rf/mul_a[59]_i_1/O
+                         net (fo=36, routed)          0.557     1.859    u_mp/u_rf/rf_ra[59]
+    SLICE_X52Y326        LUT6 (Prop_H6LUT_SLICEM_I2_O)
+                                                      0.101     1.960 r  u_mp/u_rf/regs[1][43]_i_23/O
+                         net (fo=3, routed)           0.250     2.210    u_mp/u_rf/regs[1][43]_i_23_n_0
+    SLICE_X54Y323        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.051     2.261 r  u_mp/u_rf/regs[1][41]_i_19/O
+                         net (fo=2, routed)           0.135     2.396    u_mp/u_rf/regs[1][41]_i_19_n_0
+    SLICE_X53Y322        LUT5 (Prop_F6LUT_SLICEM_I2_O)
+                                                      0.088     2.484 r  u_mp/u_rf/regs[1][40]_i_14/O
+                         net (fo=1, routed)           0.394     2.878    u_mp/u_rf/regs[1][40]_i_14_n_0
+    SLICE_X59Y322        LUT6 (Prop_C6LUT_SLICEL_I0_O)
+                                                      0.050     2.928 r  u_mp/u_rf/regs[1][40]_i_8/O
+                         net (fo=2, routed)           0.010     2.938    u_mp/u_rf/regs[1][40]_i_8_n_0
+    SLICE_X59Y322        MUXF7 (Prop_F7MUX_CD_SLICEL_I1_O)
+                                                      0.064     3.002 r  u_mp/u_rf/regs_reg[1][40]_i_12/O
+                         net (fo=1, routed)           0.212     3.214    u_mp/u_rf/regs_reg[1][40]_i_12_n_0
+    SLICE_X62Y322        LUT6 (Prop_H6LUT_SLICEL_I5_O)
+                                                      0.150     3.364 r  u_mp/u_rf/regs[1][40]_i_4/O
+                         net (fo=1, routed)           0.156     3.520    u_mp/u_rf/regs[1][40]_i_4_n_0
+    SLICE_X62Y316        LUT6 (Prop_H6LUT_SLICEL_I4_O)
+                                                      0.036     3.556 r  u_mp/u_rf/regs[1][40]_i_1/O
+                         net (fo=15, routed)          0.608     4.165    u_mp/u_rf/regs[40]
+    SLICE_X61Y315        FDCE                                         r  u_mp/u_rf/regs_reg[2][40]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.021     3.124    u_mp/u_rf/clk
+    SLICE_X61Y315        FDCE                                         r  u_mp/u_rf/regs_reg[2][40]/C
+                         clock pessimism              0.000     3.124    
+                         clock uncertainty           -0.035     3.089    
+    SLICE_X61Y315        FDCE (Setup_FFF_SLICEM_C_D)
+                                                      0.025     3.114    u_mp/u_rf/regs_reg[2][40]
+  -------------------------------------------------------------------
+                         required time                          3.114    
+                         arrival time                          -4.165    
+  -------------------------------------------------------------------
+                         slack                                 -1.051    
+
+Slack (VIOLATED) :        -1.051ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[2][40]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.135ns  (logic 0.792ns (19.156%)  route 3.343ns (80.844%))
+  Logic Levels:           9  (LUT5=2 LUT6=6 MUXF7=1)
+  Clock Path Skew:        -0.009ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.021ns = ( 3.124 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 r  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.863     0.972    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X43Y315        LUT5 (Prop_A6LUT_SLICEL_I3_O)
+                                                      0.050     1.022 f  u_mp/u_rf/mul_a[59]_i_5/O
+                         net (fo=1, routed)           0.157     1.179    u_mp/u_rf/mul_a[59]_i_5_n_0
+    SLICE_X43Y316        LUT6 (Prop_G6LUT_SLICEL_I5_O)
+                                                      0.123     1.302 f  u_mp/u_rf/mul_a[59]_i_1/O
+                         net (fo=36, routed)          0.557     1.859    u_mp/u_rf/rf_ra[59]
+    SLICE_X52Y326        LUT6 (Prop_H6LUT_SLICEM_I2_O)
+                                                      0.101     1.960 f  u_mp/u_rf/regs[1][43]_i_23/O
+                         net (fo=3, routed)           0.250     2.210    u_mp/u_rf/regs[1][43]_i_23_n_0
+    SLICE_X54Y323        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.051     2.261 f  u_mp/u_rf/regs[1][41]_i_19/O
+                         net (fo=2, routed)           0.135     2.396    u_mp/u_rf/regs[1][41]_i_19_n_0
+    SLICE_X53Y322        LUT5 (Prop_F6LUT_SLICEM_I2_O)
+                                                      0.088     2.484 f  u_mp/u_rf/regs[1][40]_i_14/O
+                         net (fo=1, routed)           0.394     2.878    u_mp/u_rf/regs[1][40]_i_14_n_0
+    SLICE_X59Y322        LUT6 (Prop_C6LUT_SLICEL_I0_O)
+                                                      0.050     2.928 f  u_mp/u_rf/regs[1][40]_i_8/O
+                         net (fo=2, routed)           0.010     2.938    u_mp/u_rf/regs[1][40]_i_8_n_0
+    SLICE_X59Y322        MUXF7 (Prop_F7MUX_CD_SLICEL_I1_O)
+                                                      0.064     3.002 f  u_mp/u_rf/regs_reg[1][40]_i_12/O
+                         net (fo=1, routed)           0.212     3.214    u_mp/u_rf/regs_reg[1][40]_i_12_n_0
+    SLICE_X62Y322        LUT6 (Prop_H6LUT_SLICEL_I5_O)
+                                                      0.150     3.364 f  u_mp/u_rf/regs[1][40]_i_4/O
+                         net (fo=1, routed)           0.156     3.520    u_mp/u_rf/regs[1][40]_i_4_n_0
+    SLICE_X62Y316        LUT6 (Prop_H6LUT_SLICEL_I4_O)
+                                                      0.036     3.556 f  u_mp/u_rf/regs[1][40]_i_1/O
+                         net (fo=15, routed)          0.608     4.165    u_mp/u_rf/regs[40]
+    SLICE_X61Y315        FDCE                                         f  u_mp/u_rf/regs_reg[2][40]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.021     3.124    u_mp/u_rf/clk
+    SLICE_X61Y315        FDCE                                         r  u_mp/u_rf/regs_reg[2][40]/C
+                         clock pessimism              0.000     3.124    
+                         clock uncertainty           -0.035     3.089    
+    SLICE_X61Y315        FDCE (Setup_FFF_SLICEM_C_D)
+                                                      0.025     3.114    u_mp/u_rf/regs_reg[2][40]
+  -------------------------------------------------------------------
+                         required time                          3.114    
+                         arrival time                          -4.165    
+  -------------------------------------------------------------------
+                         slack                                 -1.051    
+
+Slack (VIOLATED) :        -1.051ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[2][40]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.135ns  (logic 0.792ns (19.156%)  route 3.343ns (80.844%))
+  Logic Levels:           9  (LUT5=2 LUT6=6 MUXF7=1)
+  Clock Path Skew:        -0.009ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.021ns = ( 3.124 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 f  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.863     0.972    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X43Y315        LUT5 (Prop_A6LUT_SLICEL_I3_O)
+                                                      0.050     1.022 f  u_mp/u_rf/mul_a[59]_i_5/O
+                         net (fo=1, routed)           0.157     1.179    u_mp/u_rf/mul_a[59]_i_5_n_0
+    SLICE_X43Y316        LUT6 (Prop_G6LUT_SLICEL_I5_O)
+                                                      0.123     1.302 f  u_mp/u_rf/mul_a[59]_i_1/O
+                         net (fo=36, routed)          0.557     1.859    u_mp/u_rf/rf_ra[59]
+    SLICE_X52Y326        LUT6 (Prop_H6LUT_SLICEM_I2_O)
+                                                      0.101     1.960 f  u_mp/u_rf/regs[1][43]_i_23/O
+                         net (fo=3, routed)           0.250     2.210    u_mp/u_rf/regs[1][43]_i_23_n_0
+    SLICE_X54Y323        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.051     2.261 f  u_mp/u_rf/regs[1][41]_i_19/O
+                         net (fo=2, routed)           0.135     2.396    u_mp/u_rf/regs[1][41]_i_19_n_0
+    SLICE_X53Y322        LUT5 (Prop_F6LUT_SLICEM_I2_O)
+                                                      0.088     2.484 f  u_mp/u_rf/regs[1][40]_i_14/O
+                         net (fo=1, routed)           0.394     2.878    u_mp/u_rf/regs[1][40]_i_14_n_0
+    SLICE_X59Y322        LUT6 (Prop_C6LUT_SLICEL_I0_O)
+                                                      0.050     2.928 f  u_mp/u_rf/regs[1][40]_i_8/O
+                         net (fo=2, routed)           0.010     2.938    u_mp/u_rf/regs[1][40]_i_8_n_0
+    SLICE_X59Y322        MUXF7 (Prop_F7MUX_CD_SLICEL_I1_O)
+                                                      0.064     3.002 f  u_mp/u_rf/regs_reg[1][40]_i_12/O
+                         net (fo=1, routed)           0.212     3.214    u_mp/u_rf/regs_reg[1][40]_i_12_n_0
+    SLICE_X62Y322        LUT6 (Prop_H6LUT_SLICEL_I5_O)
+                                                      0.150     3.364 f  u_mp/u_rf/regs[1][40]_i_4/O
+                         net (fo=1, routed)           0.156     3.520    u_mp/u_rf/regs[1][40]_i_4_n_0
+    SLICE_X62Y316        LUT6 (Prop_H6LUT_SLICEL_I4_O)
+                                                      0.036     3.556 f  u_mp/u_rf/regs[1][40]_i_1/O
+                         net (fo=15, routed)          0.608     4.165    u_mp/u_rf/regs[40]
+    SLICE_X61Y315        FDCE                                         f  u_mp/u_rf/regs_reg[2][40]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.021     3.124    u_mp/u_rf/clk
+    SLICE_X61Y315        FDCE                                         r  u_mp/u_rf/regs_reg[2][40]/C
+                         clock pessimism              0.000     3.124    
+                         clock uncertainty           -0.035     3.089    
+    SLICE_X61Y315        FDCE (Setup_FFF_SLICEM_C_D)
+                                                      0.025     3.114    u_mp/u_rf/regs_reg[2][40]
+  -------------------------------------------------------------------
+                         required time                          3.114    
+                         arrival time                          -4.165    
+  -------------------------------------------------------------------
+                         slack                                 -1.051    
+
+Slack (VIOLATED) :        -1.028ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[9][7]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.110ns  (logic 0.985ns (23.965%)  route 3.125ns (76.035%))
+  Logic Levels:           9  (LUT6=8 MUXF7=1)
+  Clock Path Skew:        -0.010ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.020ns = ( 3.123 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 r  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.469     0.578    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X61Y300        LUT6 (Prop_B6LUT_SLICEM_I4_O)
+                                                      0.149     0.727 r  u_mp/u_rf/mul_a[26]_i_3/O
+                         net (fo=1, routed)           0.120     0.847    u_mp/u_rf/mul_a[26]_i_3_n_0
+    SLICE_X61Y300        LUT6 (Prop_H6LUT_SLICEM_I1_O)
+                                                      0.152     0.999 r  u_mp/u_rf/mul_a[26]_i_1/O
+                         net (fo=28, routed)          0.715     1.714    u_mp/u_rf/rf_ra[26]
+    SLICE_X43Y319        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.099     1.813 r  u_mp/u_rf/regs[1][10]_i_24/O
+                         net (fo=3, routed)           0.150     1.963    u_mp/u_rf/regs[1][10]_i_24_n_0
+    SLICE_X43Y319        LUT6 (Prop_D6LUT_SLICEL_I5_O)
+                                                      0.099     2.062 r  u_mp/u_rf/regs[1][10]_i_21/O
+                         net (fo=4, routed)           0.380     2.442    u_mp/u_rf/regs[1][10]_i_21_n_0
+    SLICE_X48Y311        LUT6 (Prop_C6LUT_SLICEM_I0_O)
+                                                      0.051     2.493 r  u_mp/u_rf/regs[1][7]_i_19/O
+                         net (fo=1, routed)           0.021     2.514    u_mp/u_rf/u_alu/data11[7]
+    SLICE_X48Y311        MUXF7 (Prop_F7MUX_CD_SLICEM_I1_O)
+                                                      0.068     2.582 r  u_mp/u_rf/regs_reg[1][7]_i_12/O
+                         net (fo=1, routed)           0.239     2.821    u_mp/u_rf/regs_reg[1][7]_i_12_n_0
+    SLICE_X53Y311        LUT6 (Prop_F6LUT_SLICEM_I3_O)
+                                                      0.148     2.969 r  u_mp/u_rf/regs[1][7]_i_6/O
+                         net (fo=2, routed)           0.473     3.442    u_mp/u_rf/regs[1][7]_i_6_n_0
+    SLICE_X58Y307        LUT6 (Prop_A6LUT_SLICEL_I2_O)
+                                                      0.050     3.492 f  u_mp/u_rf/regs[1][7]_i_2/O
+                         net (fo=1, routed)           0.041     3.533    u_mp/u_rf/regs[1][7]_i_2_n_0
+    SLICE_X58Y307        LUT6 (Prop_B6LUT_SLICEL_I0_O)
+                                                      0.090     3.623 r  u_mp/u_rf/regs[1][7]_i_1/O
+                         net (fo=15, routed)          0.517     4.140    u_mp/u_rf/regs[7]
+    SLICE_X62Y306        FDCE                                         r  u_mp/u_rf/regs_reg[9][7]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.020     3.123    u_mp/u_rf/clk
+    SLICE_X62Y306        FDCE                                         r  u_mp/u_rf/regs_reg[9][7]/C
+                         clock pessimism              0.000     3.123    
+                         clock uncertainty           -0.035     3.088    
+    SLICE_X62Y306        FDCE (Setup_EFF_SLICEL_C_D)
+                                                      0.025     3.113    u_mp/u_rf/regs_reg[9][7]
+  -------------------------------------------------------------------
+                         required time                          3.113    
+                         arrival time                          -4.140    
+  -------------------------------------------------------------------
+                         slack                                 -1.028    
+
+Slack (VIOLATED) :        -1.028ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[9][7]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.110ns  (logic 0.985ns (23.965%)  route 3.125ns (76.035%))
+  Logic Levels:           9  (LUT6=8 MUXF7=1)
+  Clock Path Skew:        -0.010ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.020ns = ( 3.123 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 f  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.469     0.578    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X61Y300        LUT6 (Prop_B6LUT_SLICEM_I4_O)
+                                                      0.149     0.727 r  u_mp/u_rf/mul_a[26]_i_3/O
+                         net (fo=1, routed)           0.120     0.847    u_mp/u_rf/mul_a[26]_i_3_n_0
+    SLICE_X61Y300        LUT6 (Prop_H6LUT_SLICEM_I1_O)
+                                                      0.152     0.999 r  u_mp/u_rf/mul_a[26]_i_1/O
+                         net (fo=28, routed)          0.715     1.714    u_mp/u_rf/rf_ra[26]
+    SLICE_X43Y319        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.099     1.813 r  u_mp/u_rf/regs[1][10]_i_24/O
+                         net (fo=3, routed)           0.150     1.963    u_mp/u_rf/regs[1][10]_i_24_n_0
+    SLICE_X43Y319        LUT6 (Prop_D6LUT_SLICEL_I5_O)
+                                                      0.099     2.062 r  u_mp/u_rf/regs[1][10]_i_21/O
+                         net (fo=4, routed)           0.380     2.442    u_mp/u_rf/regs[1][10]_i_21_n_0
+    SLICE_X48Y311        LUT6 (Prop_C6LUT_SLICEM_I0_O)
+                                                      0.051     2.493 r  u_mp/u_rf/regs[1][7]_i_19/O
+                         net (fo=1, routed)           0.021     2.514    u_mp/u_rf/u_alu/data11[7]
+    SLICE_X48Y311        MUXF7 (Prop_F7MUX_CD_SLICEM_I1_O)
+                                                      0.068     2.582 r  u_mp/u_rf/regs_reg[1][7]_i_12/O
+                         net (fo=1, routed)           0.239     2.821    u_mp/u_rf/regs_reg[1][7]_i_12_n_0
+    SLICE_X53Y311        LUT6 (Prop_F6LUT_SLICEM_I3_O)
+                                                      0.148     2.969 r  u_mp/u_rf/regs[1][7]_i_6/O
+                         net (fo=2, routed)           0.473     3.442    u_mp/u_rf/regs[1][7]_i_6_n_0
+    SLICE_X58Y307        LUT6 (Prop_A6LUT_SLICEL_I2_O)
+                                                      0.050     3.492 f  u_mp/u_rf/regs[1][7]_i_2/O
+                         net (fo=1, routed)           0.041     3.533    u_mp/u_rf/regs[1][7]_i_2_n_0
+    SLICE_X58Y307        LUT6 (Prop_B6LUT_SLICEL_I0_O)
+                                                      0.090     3.623 r  u_mp/u_rf/regs[1][7]_i_1/O
+                         net (fo=15, routed)          0.517     4.140    u_mp/u_rf/regs[7]
+    SLICE_X62Y306        FDCE                                         r  u_mp/u_rf/regs_reg[9][7]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.020     3.123    u_mp/u_rf/clk
+    SLICE_X62Y306        FDCE                                         r  u_mp/u_rf/regs_reg[9][7]/C
+                         clock pessimism              0.000     3.123    
+                         clock uncertainty           -0.035     3.088    
+    SLICE_X62Y306        FDCE (Setup_EFF_SLICEL_C_D)
+                                                      0.025     3.113    u_mp/u_rf/regs_reg[9][7]
+  -------------------------------------------------------------------
+                         required time                          3.113    
+                         arrival time                          -4.140    
+  -------------------------------------------------------------------
+                         slack                                 -1.028    
+
+Slack (VIOLATED) :        -1.028ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[9][7]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.110ns  (logic 0.985ns (23.965%)  route 3.125ns (76.035%))
+  Logic Levels:           9  (LUT6=8 MUXF7=1)
+  Clock Path Skew:        -0.010ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.020ns = ( 3.123 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 r  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.469     0.578    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X61Y300        LUT6 (Prop_B6LUT_SLICEM_I4_O)
+                                                      0.149     0.727 f  u_mp/u_rf/mul_a[26]_i_3/O
+                         net (fo=1, routed)           0.120     0.847    u_mp/u_rf/mul_a[26]_i_3_n_0
+    SLICE_X61Y300        LUT6 (Prop_H6LUT_SLICEM_I1_O)
+                                                      0.152     0.999 f  u_mp/u_rf/mul_a[26]_i_1/O
+                         net (fo=28, routed)          0.715     1.714    u_mp/u_rf/rf_ra[26]
+    SLICE_X43Y319        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.099     1.813 f  u_mp/u_rf/regs[1][10]_i_24/O
+                         net (fo=3, routed)           0.150     1.963    u_mp/u_rf/regs[1][10]_i_24_n_0
+    SLICE_X43Y319        LUT6 (Prop_D6LUT_SLICEL_I5_O)
+                                                      0.099     2.062 f  u_mp/u_rf/regs[1][10]_i_21/O
+                         net (fo=4, routed)           0.380     2.442    u_mp/u_rf/regs[1][10]_i_21_n_0
+    SLICE_X48Y311        LUT6 (Prop_C6LUT_SLICEM_I0_O)
+                                                      0.051     2.493 f  u_mp/u_rf/regs[1][7]_i_19/O
+                         net (fo=1, routed)           0.021     2.514    u_mp/u_rf/u_alu/data11[7]
+    SLICE_X48Y311        MUXF7 (Prop_F7MUX_CD_SLICEM_I1_O)
+                                                      0.068     2.582 f  u_mp/u_rf/regs_reg[1][7]_i_12/O
+                         net (fo=1, routed)           0.239     2.821    u_mp/u_rf/regs_reg[1][7]_i_12_n_0
+    SLICE_X53Y311        LUT6 (Prop_F6LUT_SLICEM_I3_O)
+                                                      0.148     2.969 f  u_mp/u_rf/regs[1][7]_i_6/O
+                         net (fo=2, routed)           0.473     3.442    u_mp/u_rf/regs[1][7]_i_6_n_0
+    SLICE_X58Y307        LUT6 (Prop_A6LUT_SLICEL_I2_O)
+                                                      0.050     3.492 r  u_mp/u_rf/regs[1][7]_i_2/O
+                         net (fo=1, routed)           0.041     3.533    u_mp/u_rf/regs[1][7]_i_2_n_0
+    SLICE_X58Y307        LUT6 (Prop_B6LUT_SLICEL_I0_O)
+                                                      0.090     3.623 f  u_mp/u_rf/regs[1][7]_i_1/O
+                         net (fo=15, routed)          0.517     4.140    u_mp/u_rf/regs[7]
+    SLICE_X62Y306        FDCE                                         f  u_mp/u_rf/regs_reg[9][7]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.020     3.123    u_mp/u_rf/clk
+    SLICE_X62Y306        FDCE                                         r  u_mp/u_rf/regs_reg[9][7]/C
+                         clock pessimism              0.000     3.123    
+                         clock uncertainty           -0.035     3.088    
+    SLICE_X62Y306        FDCE (Setup_EFF_SLICEL_C_D)
+                                                      0.025     3.113    u_mp/u_rf/regs_reg[9][7]
+  -------------------------------------------------------------------
+                         required time                          3.113    
+                         arrival time                          -4.140    
+  -------------------------------------------------------------------
+                         slack                                 -1.028    
+
+Slack (VIOLATED) :        -1.028ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_rf/regs_reg[9][7]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.110ns  (logic 0.985ns (23.965%)  route 3.125ns (76.035%))
+  Logic Levels:           9  (LUT6=8 MUXF7=1)
+  Clock Path Skew:        -0.010ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.020ns = ( 3.123 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 f  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.469     0.578    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X61Y300        LUT6 (Prop_B6LUT_SLICEM_I4_O)
+                                                      0.149     0.727 f  u_mp/u_rf/mul_a[26]_i_3/O
+                         net (fo=1, routed)           0.120     0.847    u_mp/u_rf/mul_a[26]_i_3_n_0
+    SLICE_X61Y300        LUT6 (Prop_H6LUT_SLICEM_I1_O)
+                                                      0.152     0.999 f  u_mp/u_rf/mul_a[26]_i_1/O
+                         net (fo=28, routed)          0.715     1.714    u_mp/u_rf/rf_ra[26]
+    SLICE_X43Y319        LUT6 (Prop_H6LUT_SLICEL_I1_O)
+                                                      0.099     1.813 f  u_mp/u_rf/regs[1][10]_i_24/O
+                         net (fo=3, routed)           0.150     1.963    u_mp/u_rf/regs[1][10]_i_24_n_0
+    SLICE_X43Y319        LUT6 (Prop_D6LUT_SLICEL_I5_O)
+                                                      0.099     2.062 f  u_mp/u_rf/regs[1][10]_i_21/O
+                         net (fo=4, routed)           0.380     2.442    u_mp/u_rf/regs[1][10]_i_21_n_0
+    SLICE_X48Y311        LUT6 (Prop_C6LUT_SLICEM_I0_O)
+                                                      0.051     2.493 f  u_mp/u_rf/regs[1][7]_i_19/O
+                         net (fo=1, routed)           0.021     2.514    u_mp/u_rf/u_alu/data11[7]
+    SLICE_X48Y311        MUXF7 (Prop_F7MUX_CD_SLICEM_I1_O)
+                                                      0.068     2.582 f  u_mp/u_rf/regs_reg[1][7]_i_12/O
+                         net (fo=1, routed)           0.239     2.821    u_mp/u_rf/regs_reg[1][7]_i_12_n_0
+    SLICE_X53Y311        LUT6 (Prop_F6LUT_SLICEM_I3_O)
+                                                      0.148     2.969 f  u_mp/u_rf/regs[1][7]_i_6/O
+                         net (fo=2, routed)           0.473     3.442    u_mp/u_rf/regs[1][7]_i_6_n_0
+    SLICE_X58Y307        LUT6 (Prop_A6LUT_SLICEL_I2_O)
+                                                      0.050     3.492 r  u_mp/u_rf/regs[1][7]_i_2/O
+                         net (fo=1, routed)           0.041     3.533    u_mp/u_rf/regs[1][7]_i_2_n_0
+    SLICE_X58Y307        LUT6 (Prop_B6LUT_SLICEL_I0_O)
+                                                      0.090     3.623 f  u_mp/u_rf/regs[1][7]_i_1/O
+                         net (fo=15, routed)          0.517     4.140    u_mp/u_rf/regs[7]
+    SLICE_X62Y306        FDCE                                         f  u_mp/u_rf/regs_reg[9][7]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.020     3.123    u_mp/u_rf/clk
+    SLICE_X62Y306        FDCE                                         r  u_mp/u_rf/regs_reg[9][7]/C
+                         clock pessimism              0.000     3.123    
+                         clock uncertainty           -0.035     3.088    
+    SLICE_X62Y306        FDCE (Setup_EFF_SLICEL_C_D)
+                                                      0.025     3.113    u_mp/u_rf/regs_reg[9][7]
+  -------------------------------------------------------------------
+                         required time                          3.113    
+                         arrival time                          -4.140    
+  -------------------------------------------------------------------
+                         slack                                 -1.028    
+
+Slack (VIOLATED) :        -1.008ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_ls/sRemain_reg[0][6]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.091ns  (logic 1.149ns (28.084%)  route 2.942ns (71.916%))
+  Logic Levels:           10  (CARRY8=1 LUT3=1 LUT5=2 LUT6=5 MUXF7=1)
+  Clock Path Skew:        -0.009ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.021ns = ( 3.124 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 r  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.617     0.726    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X48Y313        LUT6 (Prop_A6LUT_SLICEM_I4_O)
+                                                      0.150     0.876 f  u_mp/u_rf/mul_a[60]_i_3/O
+                         net (fo=1, routed)           0.181     1.057    u_mp/u_rf/mul_a[60]_i_3_n_0
+    SLICE_X48Y307        LUT6 (Prop_F6LUT_SLICEM_I1_O)
+                                                      0.148     1.205 f  u_mp/u_rf/mul_a[60]_i_1/O
+                         net (fo=36, routed)          0.521     1.727    u_mp/u_rf/rf_ra[60]
+    SLICE_X56Y314        LUT3 (Prop_E6LUT_SLICEM_I0_O)
+                                                      0.091     1.818 r  u_mp/u_rf/sBegin[7][9]_i_14/O
+                         net (fo=1, routed)           0.014     1.832    u_mp/u_rf/sBegin[7][9]_i_14_n_0
+    SLICE_X56Y314        CARRY8 (Prop_CARRY8_SLICEM_S[4]_CO[5])
+                                                      0.103     1.935 r  u_mp/u_rf/sBegin_reg[7][9]_i_8/CO[5]
+                         net (fo=35, routed)          0.289     2.223    u_mp/u_rf/ls_push1
+    SLICE_X56Y305        LUT6 (Prop_F6LUT_SLICEM_I2_O)
+                                                      0.051     2.274 r  u_mp/u_rf/pc[8]_i_6/O
+                         net (fo=11, routed)          0.205     2.479    u_mp/u_ls/pc[9]_i_4_0
+    SLICE_X54Y305        LUT5 (Prop_A6LUT_SLICEL_I3_O)
+                                                      0.149     2.628 r  u_mp/u_ls/pc[9]_i_8/O
+                         net (fo=2, routed)           0.271     2.899    u_mp/u_ls/pc[9]_i_8_n_0
+    SLICE_X51Y301        LUT6 (Prop_G6LUT_SLICEL_I0_O)
+                                                      0.097     2.996 r  u_mp/u_ls/sRemain[6][0]_i_7/O
+                         net (fo=1, routed)           0.160     3.156    u_mp/u_ls/sRemain[6][0]_i_7_n_0
+    SLICE_X47Y301        LUT6 (Prop_B6LUT_SLICEL_I0_O)
+                                                      0.124     3.280 r  u_mp/u_ls/sRemain[6][0]_i_3/O
+                         net (fo=33, routed)          0.177     3.457    u_mp/u_ls/sRemain[6][0]_i_3_n_0
+    SLICE_X44Y301        LUT5 (Prop_D6LUT_SLICEM_I3_O)
+                                                      0.088     3.545 r  u_mp/u_ls/sRemain[6][6]_i_2/O
+                         net (fo=1, routed)           0.025     3.570    u_mp/u_rf/sRemain_reg[6][6]
+    SLICE_X44Y301        MUXF7 (Prop_F7MUX_CD_SLICEM_I0_O)
+                                                      0.069     3.639 r  u_mp/u_rf/sRemain_reg[6][6]_i_1/O
+                         net (fo=8, routed)           0.482     4.121    u_mp/u_ls/sRemain_reg[6][31]_0[5]
+    SLICE_X44Y304        FDRE                                         r  u_mp/u_ls/sRemain_reg[0][6]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.021     3.124    u_mp/u_ls/clk
+    SLICE_X44Y304        FDRE                                         r  u_mp/u_ls/sRemain_reg[0][6]/C
+                         clock pessimism              0.000     3.124    
+                         clock uncertainty           -0.035     3.089    
+    SLICE_X44Y304        FDRE (Setup_EFF_SLICEM_C_D)
+                                                      0.025     3.114    u_mp/u_ls/sRemain_reg[0][6]
+  -------------------------------------------------------------------
+                         required time                          3.114    
+                         arrival time                          -4.121    
+  -------------------------------------------------------------------
+                         slack                                 -1.008    
+
+Slack (VIOLATED) :        -1.008ns  (required time - arrival time)
+  Source:                 u_mp/iw0_reg[51]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Destination:            u_mp/u_ls/sRemain_reg[0][6]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@1.551ns period=3.103ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            3.103ns  (clk rise@3.103ns - clk rise@0.000ns)
+  Data Path Delay:        4.091ns  (logic 1.149ns (28.084%)  route 2.942ns (71.916%))
+  Logic Levels:           10  (CARRY8=1 LUT3=1 LUT5=2 LUT6=5 MUXF7=1)
+  Clock Path Skew:        -0.009ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.021ns = ( 3.124 - 3.103 ) 
+    Source Clock Delay      (SCD):    0.030ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=84946, unset)        0.030     0.030    u_mp/clk
+    SLICE_X61Y313        FDCE                                         r  u_mp/iw0_reg[51]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X61Y313        FDCE (Prop_HFF_SLICEM_C_Q)
+                                                      0.079     0.109 r  u_mp/iw0_reg[51]/Q
+                         net (fo=256, routed)         0.617     0.726    u_mp/u_rf/cur_atom_exp_reg[0][51]
+    SLICE_X48Y313        LUT6 (Prop_A6LUT_SLICEM_I4_O)
+                                                      0.150     0.876 f  u_mp/u_rf/mul_a[60]_i_3/O
+                         net (fo=1, routed)           0.181     1.057    u_mp/u_rf/mul_a[60]_i_3_n_0
+    SLICE_X48Y307        LUT6 (Prop_F6LUT_SLICEM_I1_O)
+                                                      0.148     1.205 f  u_mp/u_rf/mul_a[60]_i_1/O
+                         net (fo=36, routed)          0.521     1.727    u_mp/u_rf/rf_ra[60]
+    SLICE_X56Y314        LUT3 (Prop_E6LUT_SLICEM_I0_O)
+                                                      0.091     1.818 r  u_mp/u_rf/sBegin[7][9]_i_14/O
+                         net (fo=1, routed)           0.014     1.832    u_mp/u_rf/sBegin[7][9]_i_14_n_0
+    SLICE_X56Y314        CARRY8 (Prop_CARRY8_SLICEM_S[4]_CO[5])
+                                                      0.103     1.935 f  u_mp/u_rf/sBegin_reg[7][9]_i_8/CO[5]
+                         net (fo=35, routed)          0.289     2.223    u_mp/u_rf/ls_push1
+    SLICE_X56Y305        LUT6 (Prop_F6LUT_SLICEM_I2_O)
+                                                      0.051     2.274 f  u_mp/u_rf/pc[8]_i_6/O
+                         net (fo=11, routed)          0.205     2.479    u_mp/u_ls/pc[9]_i_4_0
+    SLICE_X54Y305        LUT5 (Prop_A6LUT_SLICEL_I3_O)
+                                                      0.149     2.628 r  u_mp/u_ls/pc[9]_i_8/O
+                         net (fo=2, routed)           0.271     2.899    u_mp/u_ls/pc[9]_i_8_n_0
+    SLICE_X51Y301        LUT6 (Prop_G6LUT_SLICEL_I0_O)
+                                                      0.097     2.996 r  u_mp/u_ls/sRemain[6][0]_i_7/O
+                         net (fo=1, routed)           0.160     3.156    u_mp/u_ls/sRemain[6][0]_i_7_n_0
+    SLICE_X47Y301        LUT6 (Prop_B6LUT_SLICEL_I0_O)
+                                                      0.124     3.280 r  u_mp/u_ls/sRemain[6][0]_i_3/O
+                         net (fo=33, routed)          0.177     3.457    u_mp/u_ls/sRemain[6][0]_i_3_n_0
+    SLICE_X44Y301        LUT5 (Prop_D6LUT_SLICEM_I3_O)
+                                                      0.088     3.545 r  u_mp/u_ls/sRemain[6][6]_i_2/O
+                         net (fo=1, routed)           0.025     3.570    u_mp/u_rf/sRemain_reg[6][6]
+    SLICE_X44Y301        MUXF7 (Prop_F7MUX_CD_SLICEM_I0_O)
+                                                      0.069     3.639 r  u_mp/u_rf/sRemain_reg[6][6]_i_1/O
+                         net (fo=8, routed)           0.482     4.121    u_mp/u_ls/sRemain_reg[6][31]_0[5]
+    SLICE_X44Y304        FDRE                                         r  u_mp/u_ls/sRemain_reg[0][6]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        3.103     3.103 r  
+                                                      0.000     3.103 r  clk (IN)
+                         net (fo=84946, unset)        0.021     3.124    u_mp/u_ls/clk
+    SLICE_X44Y304        FDRE                                         r  u_mp/u_ls/sRemain_reg[0][6]/C
+                         clock pessimism              0.000     3.124    
+                         clock uncertainty           -0.035     3.089    
+    SLICE_X44Y304        FDRE (Setup_EFF_SLICEM_C_D)
+                                                      0.025     3.114    u_mp/u_ls/sRemain_reg[0][6]
+  -------------------------------------------------------------------
+                         required time                          3.114    
+                         arrival time                          -4.121    
+  -------------------------------------------------------------------
+                         slack                                 -1.008    
+
+
+
+
