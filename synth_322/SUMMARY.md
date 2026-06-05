@@ -62,3 +62,21 @@ vivado -mode batch -source tcl/synth_322.tcl      # free OOC
 vivado -mode batch -source tcl/synth_322_fp.tcl   # compact floorplan
 grep -A6 "Slack (VIOLATED)" synth_322_fp/timing_core_only_322_fp.rpt | head
 ```
+
+## Clean closing Fmax (no pipelining, standard flow)
+
+Rather than pipeline the decode stage, we also measured the highest clock
+at which the **standard single-MP build closes with zero negative slack**
+(`tcl/fmax.tcl`, same flow as `synth.tcl`+`impl.tcl`, no pblock):
+
+| Clock | Setup WNS | Hold WHS | Failing endpoints | Verdict |
+|---|---:|---:|---:|---|
+| **230 MHz** | **+0.050 ns** | +0.039 ns | **0 / 0** | **CLEAN — fully loadable** |
+| 240 MHz | −0.285 ns | +0.047 ns | 5656 / 0 | fails |
+
+So **230 MHz is the clean, fully-synthesizable Fmax** of the design as
+built (Tiara core + OOC memory stub), with no RTL pipelining. The
+prototype runs at 200 MHz (WNS +0.184 ns) to match the Corundum app
+clock. Reports: `fmax_230.0/timing_summary.rpt`, `fmax_240.0/...`.
+
+Reproduce: `TIARA_PERIOD=4.348 vivado -mode batch -source tcl/fmax.tcl`.

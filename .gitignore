@@ -67,3 +67,8 @@ synth_322_fp/*.jou
 synth_322_fp/*.log
 synth_322_stdout.log
 synth_322_fp_stdout.log
+
+# Fmax sweep: keep tcl + timing reports, not run logs
+fmax_*_stdout.log
+fmax_*/*.jou
+fmax_*/*.log
