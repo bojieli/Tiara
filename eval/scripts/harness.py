@@ -560,9 +560,14 @@ def cmd_crossover(args):
     """Paper Fig 3: latency crossover between SmartNIC offload and
     one-sided RDMA, swept over host-memory access latency.
 
-    Pure analytical: for an offload path with `n` host-memory accesses,
-    total latency = host_mem_us * n + dispatch_us.  RDMA path = n * RTT.
-    Crossover = host_mem_us where the two curves meet.
+    Ideal analytical model: resolving `n` indirections locally costs
+    n * host_mem; one-sided RDMA costs n * RTT.  The two curves therefore
+    cross exactly at host_mem == RTT -- offloading is worthwhile only when
+    a host-memory access is cheaper than a network round-trip.  Real
+    software offload also pays a per-hop dispatch overhead that shifts the
+    effective break-even *below* RTT (which is why off-path BF-2 ARM cores
+    regress despite a host access near RTT; see the BF-2 figure); we keep
+    Fig 3 to the ideal crossover and discuss dispatch in the text.
     """
     p = Params()
     n = args.depth
@@ -570,7 +575,7 @@ def cmd_crossover(args):
 
     rows = []
     for hm in host_mem_range:
-        t_offload = hm * n + 0.5
+        t_offload = hm * n
         t_rdma    = n * p.rtt_us
         rows.append((hm, t_offload, t_rdma))
 
