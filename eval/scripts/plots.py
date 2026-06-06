@@ -297,15 +297,14 @@ def plot_crossover(plt):
     ax.text(0.75, ax.get_ylim()[1] * 0.55,
             " Tiara FPGA\n PCIe (0.75 µs)", color="#009E73",
             fontsize=6.5, ha="left", va="top")
-    # BF-3 DPA host-memory latency reference (~0.8 µs, NVIDIA datasheet)
+    # BF-3 DPA host-memory latency reference (~0.85 µs, NVIDIA datasheet).
+    # Like Tiara, DPA sits below the RTT crossover -- a viable target --
+    # but still trails Tiara's hardware path (see §2.3). (BF-2's measured
+    # regression is at its own 1.9 µs cable RTT, not this 2.5 µs sweep, so
+    # it is shown separately in the BF-2 figure rather than as a marker here.)
     ax.axvline(0.85, color="#CC79A7", linestyle="--", alpha=0.7)
-    ax.text(0.85, ax.get_ylim()[1] * 0.32,
+    ax.text(0.85, ax.get_ylim()[1] * 0.30,
             " BF-3 DPA\n (~0.85 µs)", color="#CC79A7",
-            fontsize=6.5, ha="left", va="top")
-    # BF-2 ARM core internal RDMA reference (~1.7 µs, measured)
-    ax.axvline(1.7, color="#D55E00", linestyle="--", alpha=0.7)
-    ax.text(1.7, ax.get_ylim()[1] * 0.78,
-            " BF-2 ARM\n (1.7 µs)", color="#D55E00",
             fontsize=6.5, ha="left", va="top")
     ax.set_xlabel("Host-memory access latency ($\\mu$s)")
     ax.set_ylabel("End-to-end latency ($\\mu$s)")
