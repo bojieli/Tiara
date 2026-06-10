@@ -203,14 +203,7 @@ ConnectX-5/6 peer setup).
 
 ## Citation
 
-```
-@inproceedings{tiara2026,
-  title  = {Tiara: A Programmable Line-Rate ISA for Remote Memory Access},
-  author = {Anonymous},
-  booktitle = {APNet 2026},
-  year   = {2026}
-}
-```
+TODO.
 
 ## License
 
