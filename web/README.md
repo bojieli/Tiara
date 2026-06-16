@@ -1,7 +1,8 @@
 # Tiara companion website
 
 An interactive companion site for **Tiara: A Programmable Line-Rate ISA for
-Remote Memory Access** (APNet 2026). It explains the thesis (the *Indirection
+Remote Memory Access** ([arXiv:2606.13708](https://arxiv.org/abs/2606.13708)).
+It explains the thesis (the *Indirection
 Wall*), the NIC architecture and abstractions, lets you **run the Tiara
 instruction set in your browser**, and lets you **explore every evaluation
 figure interactively**.

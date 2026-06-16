@@ -199,6 +199,8 @@ export default function Playground() {
   const onNic = snap ? cyclesToUs(snap.cycles) : 0;
   const { trips, label } = rdmaRoundTrips(preset.id, args);
   const rdmaUs = trips * RTT_US;
+  // Latency is only meaningful once the program has actually executed instructions.
+  const hasRun = !!snap && snap.instrRetired > 0;
 
   const changed = new Set(lastEvent?.regWrites.map((w) => w.reg) ?? []);
 
@@ -330,12 +332,20 @@ export default function Playground() {
           {/* latency comparison */}
           <div className="card latency">
             <h4>Latency: Tiara vs. one-sided RDMA</h4>
-            <LatencyBar onNic={onNic} rdmaUs={rdmaUs} trips={trips} label={label} />
-            <p className="muted small">
-              On-NIC execution latency is cycle-calibrated to the FPGA prototype (200 MHz; ~0.75 µs PCIe DMA per host
-              access). One-sided RDMA would need <b>{trips || '—'}</b> sequentially dependent round trips
-              {label ? ` (${label})` : ''}. Tiara collapses them into a single network round trip.
-            </p>
+            {hasRun ? (
+              <>
+                <LatencyBar onNic={onNic} rdmaUs={rdmaUs} trips={trips} label={label} />
+                <p className="muted small">
+                  On-NIC execution latency is cycle-calibrated to the FPGA prototype (200 MHz; ~0.75 µs PCIe DMA per host
+                  access). One-sided RDMA would need <b>{trips || '—'}</b> sequentially dependent round trips
+                  {label ? ` (${label})` : ''}. Tiara collapses them into a single network round trip.
+                </p>
+              </>
+            ) : (
+              <p className="muted small latency-empty">
+                Step or run the program to measure its on-NIC latency and compare it against one-sided RDMA.
+              </p>
+            )}
           </div>
         </section>
 

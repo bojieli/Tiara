@@ -45,6 +45,9 @@ export default function App() {
             </button>
           ))}
         </div>
+        <a className="repo" href="https://arxiv.org/abs/2606.13708" target="_blank" rel="noreferrer">
+          Paper ↗
+        </a>
         <a className="repo" href="https://github.com/bojieli/Tiara" target="_blank" rel="noreferrer">
           GitHub ↗
         </a>
@@ -76,16 +79,21 @@ export default function App() {
 
       <footer className="footer">
         <div>
-          <strong>Tiara</strong> — A Programmable Line-Rate ISA for Remote Memory Access · APNet 2026
+          <strong>Tiara</strong> — A Programmable Line-Rate ISA for Remote Memory Access
         </div>
         <div className="muted small">
           The in-browser assembler, compiler, verifier, and simulator are TypeScript ports of the open-source Tiara
           toolchain, validated byte-for-byte against the Python reference and the Verilator RTL. Evaluation data is the
           repository’s measured + analytical results.
         </div>
-        <a href="https://github.com/bojieli/Tiara" target="_blank" rel="noreferrer">
-          github.com/bojieli/Tiara ↗
-        </a>
+        <div className="footer-links">
+          <a href="https://arxiv.org/abs/2606.13708" target="_blank" rel="noreferrer">
+            arxiv.org/abs/2606.13708 ↗
+          </a>
+          <a href="https://github.com/bojieli/Tiara" target="_blank" rel="noreferrer">
+            github.com/bojieli/Tiara ↗
+          </a>
+        </div>
       </footer>
     </div>
   );

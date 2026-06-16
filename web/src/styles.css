@@ -490,6 +490,82 @@ main {
   color: var(--tiara);
 }
 
+/* indirection-wall worked example + timeline figure */
+.example-callout {
+  background: linear-gradient(90deg, var(--tiara-soft), #fff 70%);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--tiara);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 1.4rem;
+}
+.example-tag {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--tiara);
+}
+.example-callout p {
+  margin: 0.35rem 0 0;
+  color: var(--ink-2);
+  font-size: 0.98rem;
+}
+.rdma-ink {
+  color: var(--rdma);
+}
+.tiara-ink {
+  color: var(--tiara);
+}
+
+.timeline-fig {
+  margin: 0 0 1.4rem;
+}
+.timeline-fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.timeline-fig text {
+  font-family: var(--sans);
+}
+.tl-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+.tl-lane {
+  font-size: 11px;
+}
+.tl-num {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+  text-anchor: middle;
+}
+.tl-measure {
+  font-size: 12px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+.tl-measure.start {
+  text-anchor: start;
+}
+.tl-saved {
+  font-size: 12px;
+  font-style: italic;
+  text-anchor: middle;
+}
+.tl-local {
+  font-size: 11px;
+  text-anchor: middle;
+}
+.timeline-fig figcaption {
+  margin-top: 0.7rem;
+}
+.latency-empty {
+  margin: 0.6rem 0 0;
+}
+
 /* architecture diagram */
 .arch {
   display: flex;
@@ -1328,10 +1404,19 @@ textarea.code:focus {
   font-size: 0.9rem;
   color: var(--ink-2);
 }
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-top: 0.4rem;
+}
 .footer a {
   color: var(--tiara);
   text-decoration: none;
   font-weight: 600;
+}
+.footer a:hover {
+  text-decoration: underline;
 }
 
 /* ---------- responsive ---------- */

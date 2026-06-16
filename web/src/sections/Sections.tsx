@@ -1,5 +1,6 @@
 import HeroDemo from '../components/HeroDemo';
 import IsaReference from '../components/IsaReference';
+import IndirectionTimeline from '../components/IndirectionTimeline';
 import Chart from '../components/Chart';
 import { CHARTS, PT_WALK } from '../data/eval';
 
@@ -8,7 +9,7 @@ export function Hero({ go }: { go: (id: string) => void }) {
     <header className="hero" id="top">
       <div className="hero-inner">
         <div className="hero-left">
-          <div className="kicker">APNet 2026</div>
+          <div className="kicker">arXiv preprint</div>
           <h1>
             Tiara: a programmable line-rate ISA for <span className="hl">remote memory access</span>
           </h1>
@@ -29,6 +30,9 @@ export function Hero({ go }: { go: (id: string) => void }) {
             <button className="btn ghost big" onClick={() => go('evaluation')}>
               Explore the evaluation
             </button>
+            <a className="btn ghost big" href="https://arxiv.org/abs/2606.13708" target="_blank" rel="noreferrer">
+              Read the paper ↗
+            </a>
           </div>
           <div className="hero-stats">
             <Stat n="2.85×" l="lower graph-traversal latency vs RDMA" />
@@ -61,75 +65,29 @@ export function Thesis() {
     <section className="section" id="thesis">
       <SectionHead n="01" title="The Indirection Wall" />
       <p className="section-lede">
-        One-sided RDMA pays one RTT per indirection level, and those RTTs are <em>sequentially dependent</em>: the
-        client cannot issue level <i>i+1</i> until level <i>i</i> returns. No batching or prefetching helps. Three
-        patterns recur across systems and the AI stack:
+        When the address you need is itself stored in remote memory, one-sided RDMA has to fetch it first — and every
+        level of indirection becomes another <em>sequentially dependent</em> round trip. You can’t issue the next
+        request until the previous one returns, so no batching or prefetching helps.
       </p>
-      <div className="cards-3">
-        <Pattern
-          icon="↪"
-          title="Pointer chasing"
-          body="Graph traversals and linked structures store each successor’s address in the current node. Every hop is a round trip — social-network analysis, knowledge graphs, graph-RAG."
-        />
-        <Pattern
-          icon="⇲"
-          title="Multi-level translation"
-          body="Page tables and block-table lookups resolve addresses through k levels of indirection. vLLM PagedAttention and MoE expert tables are direct instances."
-        />
-        <Pattern
-          icon="⇄"
-          title="Conditional multi-host coordination"
-          body="Distributed locks and log replication use atomic CAS on one node, then conditionally propagate to replicas — a chain of dependent operations across hosts."
-        />
-      </div>
 
-      <div className="rtt-table-wrap">
-        <h3>RTT cost of indirection across workloads</h3>
-        <table className="rtt-table">
-          <thead>
-            <tr>
-              <th>Workload</th>
-              <th>Pattern</th>
-              <th>RDMA</th>
-              <th>Tiara</th>
-            </tr>
-          </thead>
-          <tbody>
-            <RttRow w="Graph traversal (depth d)" p="pointer chase" r="d RTTs" t="1 RTT" />
-            <RttRow w="Page-table walk (3-level)" p="multi-level translation" r="3 + 1 RTTs" t="1 RTT" />
-            <RttRow w="Distributed lock + replication" p="CAS + conditional writes" r="5 RTTs" t="2 RTTs" />
-            <RttRow w="PagedAttention" p="table lookup + gather" r="160 / 2 RTTs" t="1 RTT" />
-            <RttRow w="MoE expert loading" p="paged translation" r="2 RTTs" t="1 RTT" />
-            <RttRow w="Sparse attention (NSA)" p="score-then-select" r="2 RTTs" t="1 RTT" />
-          </tbody>
-        </table>
-        <p className="muted small">
-          The cost is severe: latency grows as Depth × RTT and link utilization collapses between dependent accesses —
-          the “killer microseconds” regime. A single LLaMA3-70B PagedAttention request can incur 160 sequential RTTs,
-          leaving a 200 Gbps link idle 83% of the time.
+      <div className="example-callout">
+        <span className="example-tag">Worked example</span>
+        <p>
+          <strong>Walk a 9-hop path through a remote linked list.</strong> Each node stores the address of the next
+          node, so the client can’t compute hop <i>i+1</i> until hop <i>i</i>’s data comes back. One-sided RDMA pays{' '}
+          <b className="rdma-ink">9 sequential round trips</b>; Tiara resolves the whole chain on the memory-side NIC
+          and answers in <b className="tiara-ink">a single round trip</b>.
         </p>
       </div>
-    </section>
-  );
-}
 
-function Pattern({ icon, title, body }: { icon: string; title: string; body: string }) {
-  return (
-    <div className="pattern card">
-      <div className="pattern-icon">{icon}</div>
-      <h4>{title}</h4>
-      <p>{body}</p>
-    </div>
-  );
-}
-function RttRow({ w, p, r, t }: { w: string; p: string; r: string; t: string }) {
-  return (
-    <tr>
-      <td>{w}</td>
-      <td className="muted">{p}</td>
-      <td className="rdma-cell">{r}</td>
-      <td className="tiara-cell">{t}</td>
-    </tr>
+      <IndirectionTimeline />
+
+      <p className="muted small">
+        The same pattern recurs across systems and the AI stack — page-table and block-table walks, distributed lock +
+        replication, PagedAttention, MoE expert paging. The paper works through the full set of workloads and their RTT
+        costs.
+      </p>
+    </section>
   );
 }
 
@@ -137,11 +95,6 @@ export function Architecture() {
   return (
     <section className="section" id="architecture">
       <SectionHead n="02" title="Architecture" />
-      <p className="section-lede">
-        The Tiara NIC adds an execution engine to a standard RDMA pipeline: incoming requests are routed by a task
-        dispatcher to one of 8 lightweight memory processors (MPs), each a sequential scalar core that accesses host
-        DRAM via PCIe DMA. Operators are verified on the host and loaded into per-MP instruction stores.
-      </p>
 
       <div className="arch card">
         <div className="arch-row remote">Remote nodes</div>
@@ -170,31 +123,7 @@ export function Architecture() {
           <div className="arch-block cv">Compiler &amp; Verifier → register operators</div>
         </div>
       </div>
-
-      <div className="cards-3">
-        <InfoCard
-          title="Sequential, in-order MPs"
-          body="Each MP is an 11-state FSM — no cache, no branch prediction, no out-of-order. Register-chained loads are made correct by stalling fetch until writeback, committing a load in a single cycle. This hardware-native path drops per-hop cost below the software-dispatch floor of ARM/RISC-V cores."
-        />
-        <InfoCard
-          title="Multi-tenant by static isolation"
-          body="A 256-entry op_id → start_pc table routes any registered operator in O(1). Isolation is static: every operator is verified at registration to touch only its declared regions, so the runtime needs no per-access check and one tenant cannot reach another’s memory."
-        />
-        <InfoCard
-          title="Tiny footprint"
-          body="A single MP at 200 MHz costs 2.95K LUT + 1.69K FF + 2 BRAM + 10 DSP on a U50; 8 MPs occupy ~3% of a ConnectX-class NIC die. The whole point is a minimal ISA, not a general-purpose core."
-        />
-      </div>
     </section>
-  );
-}
-
-function InfoCard({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="card info">
-      <h4>{title}</h4>
-      <p>{body}</p>
-    </div>
   );
 }
 
@@ -202,20 +131,11 @@ export function Abstractions() {
   return (
     <section className="section" id="abstractions">
       <SectionHead n="03" title="Abstractions & instruction set" />
-      <div className="cards-3">
-        <InfoCard
-          title="Operators & tasks"
-          body="An operator is a small pre-registered program, registered once (and verified) like loading an eBPF program. A client invokes it with one message — operator ID + up to 8 register arguments — and the NIC spins up a task backed by a 16×64b register file, with no host CPU involvement."
-        />
-        <InfoCard
-          title="Register-chained loads"
-          body="The key enabler: a LOAD writes its result into a GPR that a subsequent LOAD can use as its address operand in the very next cycle. A multi-RTT pointer chase becomes a sequence of local memory accesses, each ~0.75 µs on the FPGA prototype instead of a full network RTT."
-        />
-        <InfoCard
-          title="Async + Wait"
-          body="MEMCPY executes asynchronously; WAIT(threshold) synchronizes. Threshold 0 drains all in-flight ops; threshold > 0 enables quorum-style sync. This also pipelines transfers — issuing KV block reads as block-table entries resolve, hiding address resolution behind data movement."
-        />
-      </div>
+      <p className="section-lede">
+        A handful of instructions, registered and verified once like an eBPF program. The key primitive is the{' '}
+        <strong>register-chained load</strong>: a <code>LOAD</code> writes a register that the next <code>LOAD</code> can
+        use as its address — turning a multi-RTT pointer chase into local memory accesses.
+      </p>
       <IsaReference />
     </section>
   );

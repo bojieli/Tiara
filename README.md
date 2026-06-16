@@ -17,8 +17,9 @@ locally.
 > interactive evaluation explorer. `cd web && npm install && npm run dev`.
 
 This repository is the FPGA-targeted reference implementation referenced
-by the APNet 2026 paper *“Tiara: A Programmable Line-Rate ISA for
-Remote Memory Access”*. It contains:
+by the paper *“Tiara: A Programmable Line-Rate ISA for
+Remote Memory Access”* ([arXiv:2606.13708](https://arxiv.org/abs/2606.13708)).
+It contains:
 
 * **SystemVerilog RTL** (`rtl/tiara_nic`) for the Tiara NIC
   data path: 16-register memory processor (MP), private 1024-entry
@@ -203,7 +204,20 @@ ConnectX-5/6 peer setup).
 
 ## Citation
 
-TODO.
+If you use Tiara in your research, please cite our paper
+([arXiv:2606.13708](https://arxiv.org/abs/2606.13708)):
+
+```bibtex
+@misc{tiara2026,
+  title         = {Tiara: A Programmable Line-Rate ISA for Remote Memory Access},
+  author        = {Li, Bojie},
+  year          = {2026},
+  eprint        = {2606.13708},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.NI},
+  url           = {https://arxiv.org/abs/2606.13708}
+}
+```
 
 ## License
 
